@@ -24,12 +24,14 @@ enum AttackType {
 }
 
 pub struct Hero {
-    position: Vec2,
+    pub position: Vec2,
     direction: f32,
     velocity: Vec2,
     state: State,
     animations: HashMap<State, AnimationData>,
     pub sprite: AnimatedSprite,
+
+    collision_box: Rect,
 
     on_the_floor: bool,
     dash: bool,
@@ -43,10 +45,10 @@ impl Hero {
             (State::AirDash, AnimationData{x: 0, y: 0, h: 64, w: 64, frames: 7, speed: 4, pivot_x: 0, pivot_y: 48}),
             (State::Dash, AnimationData{x: 0, y: 64, h: 64, w: 64, frames: 7, speed: 4, pivot_x: 0, pivot_y: 48}),
             (State::Walk, AnimationData{x: 0, y: 128, h: 64, w: 64, frames: 8, speed: 4, pivot_x: 0, pivot_y: 48}),
-            (State::Idle, AnimationData{x: 0, y: 192, h: 64, w: 64, frames: 8, speed: 4, pivot_x: 0, pivot_y: 48}),
+            (State::Idle, AnimationData{x: 0, y: 192, h: 64, w: 64, frames: 8, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 48}),
             (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 48}),
-            (State::AttackDouble, AnimationData{x: 0, y: 384, h: 64, w: 64, frames: 19, speed: 2, pivot_x: 0, pivot_y: 48}),
+            (State::AttackDouble, AnimationData{x: 0, y: 384, h: 64, w: 64, frames: 19, speed: 1, pivot_x: 0, pivot_y: 48}),
             (State::AttackOne, AnimationData{x: 0, y: 448, h: 64, w: 64, frames: 17, speed: 4, pivot_x: 0, pivot_y: 48}),
         ]);
 
@@ -62,6 +64,7 @@ impl Hero {
             state,
             animations,
             sprite,
+            collision_box: Rect { x: 27.0, y: 28.0, w: 10.0, h: 20.0 },
 
             on_the_floor: false,
             dash: false,
@@ -99,22 +102,28 @@ impl Hero {
 
 
         self.state_manager();
-
-        // position update
-        self.position += self.velocity;
-
-        // Just check ground collision
-        if self.position.y >= 101.0 {
-            self.position.y = 101.0;
+        if self.get_collision_box(0.0, self.velocity.y).overlaps(&Rect{x: 0.0, y: 101.0, w: 426.0, h: 16.0}){
             self.velocity.y = 0.0;
             self.on_the_floor = true;
         }
+        // position update
+        self.position += self.velocity;
+
+
+        // Just check ground collision
+        //if self.position.y >= 101.0 {
+        //    self.position.y = 101.0;
+        //    self.velocity.y = 0.0;
+        //    self.on_the_floor = true;
+        //}
+
 
         self.sprite.set_position_to(self.position);
     }
 
 
     fn state_manager(&mut self) {
+
         let previous_state = self.state;
         match self.state {
             State::Idle => {
@@ -196,4 +205,7 @@ impl Hero {
     }
 
 
+    pub fn get_collision_box(&self, dx: f32, dy: f32) -> Rect {
+        Rect { x: self.position.x + self.collision_box.x + dx, y: self.position.y + self.collision_box.y + dy, w: self.collision_box.w, h: self.collision_box.h }
+    }
 }

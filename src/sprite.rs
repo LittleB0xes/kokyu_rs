@@ -75,8 +75,8 @@ impl AnimatedSprite {
 
         draw_texture_ex(
             texture,
-            ((self.position.x - self.pivot_x as f32)* scale - camera.x).round(),
-            ((self.position.y - self.pivot_y as f32)* scale - camera.y).round(),
+            (self.position.x* scale - camera.x).round(),
+            (self.position.y* scale - camera.y).round(),
             self.color,
             params,
         );
@@ -89,7 +89,10 @@ impl AnimatedSprite {
     }
 
     pub fn set_position_to(&mut self, position: Vec2) {
-        self.position = position;
+        self.position = Vec2{
+            x: position.x - self.pivot_x as f32,
+            y: position.y - self.pivot_y as f32,
+        }
     }
 
     pub fn set_frame(&mut self, value: i32)  {

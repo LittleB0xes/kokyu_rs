@@ -65,6 +65,13 @@ impl Game {
 
     pub fn render(&mut self) {
         clear_background(BLACK);
+
+        // To keep the letterbox view and the centered scene (hand crafted)
+        // resize the image with the screen width
+        self.scale = 3.0 * screen_width() / 1280.0;
+        // and replace the camera
+        self.camera.y = -0.5 * (screen_height() - 112.0 * self.scale);
+
         let bg_params = DrawTextureParams {
             dest_size: Some(Vec2::new(426.0 * self.scale, 112.0 * self.scale)),
             source: Some(Rect::new(0.0, 0.0, 426.0, 112.0)),
@@ -80,6 +87,14 @@ impl Game {
             let texture = self.texture_library.get(&TextureName::ParticleOne).expect("No texture in library").clone();
             part.sprite.draw_sprite(texture, self.camera, self.scale);
         }
+
+
+
+        // debug rendering
+        set_default_camera();
+        draw_text(&format!("position: {} / {}", self.hero.position.x, self.hero.position.y), 16.0, 16.0, 24.0, RED);
+        let h_box = self.hero.get_collision_box(0.0, 0.0);
+        draw_rectangle_lines(h_box.x * self.scale - self.camera.x , h_box.y * self.scale - self.camera.y, h_box.w * self.scale, h_box.h * self.scale, 1.0, RED);
     }
 
     fn get_texture(&self, name: TextureName) -> Texture2D {
