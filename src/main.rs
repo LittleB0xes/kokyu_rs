@@ -26,7 +26,7 @@ async fn main() {
 fn window_conf() -> Conf {
     Conf {
         window_title: "Kokyu".to_owned(),
-        window_width: 1280,
+        window_width: 1278,
         window_height: 720,
         fullscreen: false,
         //high_dpi: true,
