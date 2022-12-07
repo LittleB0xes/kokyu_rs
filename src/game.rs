@@ -16,11 +16,7 @@ enum TextureName{
 pub struct Game {
     texture_library: HashMap<TextureName, Texture2D>,
     particles: Vec<Particle>,
-    scale: f32,
-    camera: Vec2,
-
     hero: Hero,
-
 }
 
 impl Game {
@@ -47,10 +43,6 @@ impl Game {
         }
         Self {
             texture_library,
-            scale: 1.0,
-            //camera: Vec2 { x: 0.0, y: -0.5 * (720.0 - 112.0 * 3.0) },
-            camera: Vec2 { x: 0.0, y: 0.0 },
-
             hero: Hero::new(0.0, 0.0),
             particles,
         }
@@ -61,7 +53,6 @@ impl Game {
         for part in self.particles.iter_mut() {
             part.update();
         }
-
     }
 
     /// An ugly experimental empiric camera setting function
@@ -72,33 +63,31 @@ impl Game {
         set_camera(&camera);
     }
 
-
     pub fn render(&mut self) {
         clear_background(BLACK);
 
         self.set_camera_view();
 
         let bg_params = DrawTextureParams {
-            dest_size: Some(Vec2::new(426.0 * self.scale, 112.0 * self.scale)),
+            dest_size: Some(Vec2::new(426.0, 112.0)),
             source: Some(Rect::new(0.0, 0.0, 426.0, 112.0)),
             rotation: 0.0,
             flip_x: false,
             flip_y: false,
             pivot: None};
-        draw_texture_ex(self.get_texture(TextureName::Background), -self.camera.x , -self.camera.y, WHITE, bg_params);
+        draw_texture_ex(self.get_texture(TextureName::Background), 0.0 , 0.0, WHITE, bg_params);
 
-        self.hero.sprite.draw_sprite(self.get_texture(TextureName::Hero), self.camera, self.scale);
+        self.hero.sprite.draw_sprite(self.get_texture(TextureName::Hero), Vec2::ZERO, 1.0);
 
         for part in self.particles.iter_mut() {
             let texture = self.texture_library.get(&TextureName::ParticleOne).expect("No texture in library").clone();
-            part.sprite.draw_sprite(texture, self.camera, self.scale);
+            part.sprite.draw_sprite(texture, Vec2::ZERO, 1.0);
         }
-
 
 
         // debug rendering
         let h_box = self.hero.get_collision_box(0.0, 0.0);
-        draw_rectangle_lines(h_box.x * self.scale - self.camera.x , h_box.y * self.scale - self.camera.y, h_box.w * self.scale, h_box.h * self.scale, 1.0, RED);
+        draw_rectangle_lines(h_box.x , h_box.y, h_box.w , h_box.h , 1.0, RED);
 
         self.debug_info();
     }
