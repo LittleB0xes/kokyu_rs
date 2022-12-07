@@ -148,14 +148,16 @@ impl Game {
         }
 
 
-        // debug rendering
-        let h_box = self.hero.get_collision_box(0.0, 0.0);
-        draw_rectangle_lines(h_box.x , h_box.y, h_box.w , h_box.h , 1.0, RED);
 
-        self.debug_info();
+        //self.debug_info();
+
     }
 
     fn debug_info(&self) {
+        // debug rendering
+        let h_box = self.hero.get_collision_box(0.0, 0.0);
+        draw_rectangle_lines(h_box.x , h_box.y, h_box.w , h_box.h , 1.0, RED);
+        
         set_default_camera();    
         draw_text(&format!("position: {} / {}", self.hero.position.x, self.hero.position.y), 16.0, 32.0, 24.0, RED);
 

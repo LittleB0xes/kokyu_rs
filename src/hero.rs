@@ -20,7 +20,8 @@ enum State {
 
 enum AttackType {
     Heavy,
-    Double
+    Double,
+    AttackDash{timer: i32, dir: f32},
 }
 
 pub struct Hero {
@@ -78,7 +79,12 @@ impl Hero {
 
         self.direction = controls::get_x_axis();
 
-        if self.direction != 0.0 {
+        if let Some(AttackType::AttackDash { timer: _, dir }) = &self.attack {
+            self.direction = *dir;
+            self.velocity.x = self.direction * 6.0;
+        }
+
+        else if self.direction != 0.0 {
             self.velocity.x = self.direction * 2.0;
         }
         else {
@@ -94,8 +100,15 @@ impl Hero {
 
         match self.attack {
             None => {
-                if is_key_pressed(KeyCode::C) {self.attack = Some(AttackType::Double)}
-                if is_key_pressed(KeyCode::V) {self.attack = Some(AttackType::Heavy)}
+                if is_key_pressed(KeyCode::V) {
+                    if self.direction != 0.0 && self.on_the_floor {
+                        self.attack = Some(AttackType::AttackDash{timer: 10, dir: self.direction});
+                    }
+                    else {
+                        self.attack = Some(AttackType::Double);
+                    }
+                }
+                if is_key_pressed(KeyCode::C) {self.attack = Some(AttackType::Heavy)}
             },
             Some(_) => {}
         }
@@ -108,14 +121,6 @@ impl Hero {
         }
         // position update
         self.position += self.velocity;
-
-
-        // Just check ground collision
-        //if self.position.y >= 101.0 {
-        //    self.position.y = 101.0;
-        //    self.velocity.y = 0.0;
-        //    self.on_the_floor = true;
-        //}
 
 
         self.sprite.set_position_to(self.position);
@@ -153,6 +158,9 @@ impl Hero {
                         match a {
                             AttackType::Double => {self.state = State::AttackDouble},
                             AttackType::Heavy => {self.state = State::AttackOne},
+                            AttackType::AttackDash{timer: _, dir: _} => {
+                                self.state = State::Dash;
+                            }
                             _ => {}
                         }
                     },
@@ -187,6 +195,21 @@ impl Hero {
                     self.attack = None;
                 }
             },
+
+            State::Dash => {
+                if let Some(AttackType::AttackDash{timer, dir }) = &self.attack {
+                    let t = timer - 1;
+                    if t > 0 {
+                        self.attack = Some(AttackType::AttackDash { timer: t , dir: *dir});
+
+                    }
+                    else {
+                        self.attack = None;
+                        self.state = State::Idle;
+                    }
+                }
+
+            }
 
             _ => {}
         }

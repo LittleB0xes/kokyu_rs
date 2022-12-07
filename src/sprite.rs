@@ -75,8 +75,8 @@ impl AnimatedSprite {
 
         draw_texture_ex(
             texture,
-            (self.position.x* scale - camera.x).round(),
-            (self.position.y* scale - camera.y).round(),
+            (self.position.x * scale - camera.x).round(),
+            (self.position.y * scale - camera.y).round(),
             self.color,
             params,
         );
