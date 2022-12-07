@@ -22,6 +22,7 @@ enum AttackType {
     Heavy,
     Double,
     AttackDash{timer: i32, dir: f32},
+    AttackAirDash{timer: i32, dir: f32},
 }
 
 pub struct Hero {
@@ -79,9 +80,15 @@ impl Hero {
 
         self.direction = controls::get_x_axis();
 
+        
+
         if let Some(AttackType::AttackDash { timer: _, dir }) = &self.attack {
             self.direction = *dir;
             self.velocity.x = self.direction * 6.0;
+        }
+        else if let Some(AttackType::AttackAirDash { timer: _, dir }) = &self.attack {
+            self.direction = *dir;
+            self.velocity.x = self.direction * 8.0;
         }
 
         else if self.direction != 0.0 {
@@ -103,6 +110,10 @@ impl Hero {
                 if is_key_pressed(KeyCode::V) {
                     if self.direction != 0.0 && self.on_the_floor {
                         self.attack = Some(AttackType::AttackDash{timer: 10, dir: self.direction});
+                    }
+                    else if self.direction != 0.0 && !self.on_the_floor {
+                        self.attack = Some(AttackType::AttackAirDash{timer: 10, dir: self.direction});
+
                     }
                     else {
                         self.attack = Some(AttackType::Double);
@@ -173,6 +184,7 @@ impl Hero {
                     Some(a) => {
                         match a {
                             AttackType::Double => {self.state = State::AttackDouble},
+                            AttackType::AttackAirDash { timer: _, dir: _ } => {self.state = State::AirDash},
                             _ => {}
                         }
                     },
@@ -206,6 +218,24 @@ impl Hero {
                     else {
                         self.attack = None;
                         self.state = State::Idle;
+                    }
+                }
+            },
+
+            State::AirDash => {
+                if self.on_the_floor {
+                    self.state = State::Idle;
+                    self.attack = None;
+                }
+                if let Some(AttackType::AttackAirDash{timer, dir }) = &self.attack {
+                    let t = timer - 1;
+                    if t > 0 {
+                        self.attack = Some(AttackType::AttackAirDash { timer: t , dir: *dir});
+
+                    }
+                    else {
+                        self.attack = None;
+                        self.state = State::Walk;
                     }
                 }
 
