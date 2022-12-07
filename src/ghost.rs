@@ -16,6 +16,7 @@ enum MonsterState {
 pub struct Ghost {
     pub position: Vec2,
     pub sprite: AnimatedSprite,
+    direction: f32,
     collision_box: Rect,
     state: MonsterState,
     animations: HashMap<MonsterState, AnimationData>,
@@ -36,7 +37,7 @@ impl Ghost {
 
         ]);
 
-        let state = MonsterState::Idle;
+        let state = MonsterState::Birth;
         let mut sprite = AnimatedSprite::new(animations.get(&state).expect("No animation in library"));
         sprite.set_position_to(position);
 
@@ -47,6 +48,7 @@ impl Ghost {
             animations,
             sprite,
             collision_box: Rect { x: 26.0, y: 19.0, w: 14.0, h: 22.0 },
+            direction: 0.0
         }
 
     }
@@ -55,10 +57,38 @@ impl Ghost {
 
         // Look in the right direction
         if self.position.x > hero_pos.x {
-            self.sprite.flip_x = true;
+            self.direction = -1.0;
         }
         else if self.position.x < hero_pos.x {
+            self.direction = 1.0;
+        }
+
+        self.state_manager();
+    }
+
+    fn state_manager(&mut self) {
+        let previous_state = self.state;
+        match self.state {
+            MonsterState::Birth => {
+                if self.sprite.is_animation_ended() {
+                    self.state = MonsterState::Idle;
+                }
+            },
+            MonsterState::Idle => {},
+            MonsterState::Hit => {},
+            MonsterState::Death => {}
+
+        }
+        if self.direction == 1.0 {
             self.sprite.flip_x = false;
+        }
+        else if self.direction == -1.0 {
+            self.sprite.flip_x = true;
+        }
+
+        if previous_state != self.state {
+            self.sprite.set_animation(self.animations.get(&self.state).expect("No animation"));
+            self.sprite.play();
         }
     }
     

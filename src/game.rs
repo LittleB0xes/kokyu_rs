@@ -177,6 +177,9 @@ impl Game {
             part.sprite.draw_sprite(texture, Vec2::ZERO, 1.0);
         }
 
+        // Letterbox mask (to avoid some artifact)
+        draw_rectangle(0.0, -64.0, 426.0, 64.0, BLACK);
+        draw_rectangle(0.0, 176.0, 426.0, 64.0, BLACK);
 
 
         self.debug_info();

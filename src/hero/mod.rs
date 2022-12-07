@@ -18,10 +18,10 @@ enum State {
     Jump,
     AttackOne,
     AttackDouble,
-    RepeatAttack,
+    //RepeatAttack,
     Dash,
     AirDash,
-    Dead,
+    //Dead,
 }
 
 
@@ -36,7 +36,6 @@ pub struct Hero {
     collision_box: Rect,
 
     on_the_floor: bool,
-    dash: bool,
     attack: Option<AttackType>
 }
 
@@ -69,7 +68,6 @@ impl Hero {
             collision_box: Rect { x: 27.0, y: 28.0, w: 10.0, h: 20.0 },
 
             on_the_floor: false,
-            dash: false,
             attack: None,
         }
     }
@@ -240,8 +238,6 @@ impl Hero {
                 }
 
             }
-
-            _ => {}
         }
 
         if self.direction == 1.0 {
