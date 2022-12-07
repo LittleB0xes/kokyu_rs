@@ -5,6 +5,12 @@ use std::collections::HashMap;
 use crate::sprite::{AnimationData, AnimatedSprite};
 use crate::controls;
 
+use hit_boxes::AttackType;
+
+use self::hit_boxes::get_hit_box;
+
+mod hit_boxes;
+
 #[derive(PartialEq, Eq, Copy, Clone, Hash)]
 enum State {
     Idle,
@@ -18,12 +24,6 @@ enum State {
     Dead,
 }
 
-enum AttackType {
-    Heavy,
-    Double,
-    AttackDash{timer: i32, dir: f32},
-    AttackAirDash{timer: i32, dir: f32},
-}
 
 pub struct Hero {
     pub position: Vec2,
@@ -44,14 +44,14 @@ impl Hero {
     pub fn new(x: f32, y: f32) -> Self {
         let position = Vec2 { x, y };
         let animations = HashMap::from([
-            (State::AirDash, AnimationData{x: 0, y: 0, h: 64, w: 64, frames: 7, speed: 4, pivot_x: 0, pivot_y: 48}),
-            (State::Dash, AnimationData{x: 0, y: 64, h: 64, w: 64, frames: 7, speed: 4, pivot_x: 0, pivot_y: 48}),
-            (State::Walk, AnimationData{x: 0, y: 128, h: 64, w: 64, frames: 8, speed: 4, pivot_x: 0, pivot_y: 48}),
+            (State::AirDash, AnimationData{x: 0, y: 0, h: 64, w: 64, frames: 7, speed: 4, pivot_x: 0, pivot_y: 0}),
+            (State::Dash, AnimationData{x: 0, y: 64, h: 64, w: 64, frames: 7, speed: 4, pivot_x: 0, pivot_y: 0}),
+            (State::Walk, AnimationData{x: 0, y: 128, h: 64, w: 64, frames: 8, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::Idle, AnimationData{x: 0, y: 192, h: 64, w: 64, frames: 8, speed: 4, pivot_x: 0, pivot_y: 0}),
-            (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 48}),
-            (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 48}),
-            (State::AttackDouble, AnimationData{x: 0, y: 384, h: 64, w: 64, frames: 19, speed: 1, pivot_x: 0, pivot_y: 48}),
-            (State::AttackOne, AnimationData{x: 0, y: 448, h: 64, w: 64, frames: 17, speed: 4, pivot_x: 0, pivot_y: 48}),
+            (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 0}),
+            (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 0}),
+            (State::AttackDouble, AnimationData{x: 0, y: 384, h: 64, w: 64, frames: 19, speed: 1, pivot_x: 0, pivot_y: 0}),
+            (State::AttackOne, AnimationData{x: 0, y: 448, h: 64, w: 64, frames: 17, speed: 4, pivot_x: 0, pivot_y: 0}),
         ]);
 
         let state = State::Idle;
@@ -260,5 +260,13 @@ impl Hero {
 
     pub fn get_collision_box(&self, dx: f32, dy: f32) -> Rect {
         Rect { x: self.position.x + self.collision_box.x + dx, y: self.position.y + self.collision_box.y + dy, w: self.collision_box.w, h: self.collision_box.h }
+    }
+
+    pub fn debug_hitbox(&self) {
+        if let Some(attack) = &self.attack {
+            if let Some(h_box) = get_hit_box(attack, self.sprite.current_frame, self.sprite.flip_x) {
+                draw_rectangle_lines(h_box.x + self.position.x, h_box.y + self.position.y, h_box.w, h_box.h, 1.0, YELLOW);
+            }
+        }
     }
 }

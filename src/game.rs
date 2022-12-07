@@ -5,12 +5,14 @@ use macroquad::{prelude::*, rand::gen_range};
 
 use crate::{hero::Hero, particle::Particle};
 use crate::light::Light;
+use crate::ghost::Ghost;
 
 
 #[derive(Eq, PartialEq, Hash)]
 enum TextureName{
     Background,
     Ground,
+    Ghost,
     ParticleOne,
     Hero,
     Light,
@@ -19,6 +21,7 @@ enum TextureName{
 pub struct Game {
     texture_library: HashMap<TextureName, Texture2D>,
     particles: Vec<Particle>,
+    monsters: Vec<Ghost>,
     lights: [Light; 6],
     hero: Hero,
 }
@@ -45,13 +48,17 @@ impl Game {
 
         let light_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/Light.png"), None);
         light_texture.set_filter(FilterMode::Nearest);
+        
+        let ghost_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/MonsterOne.png"), None);
+        ghost_texture.set_filter(FilterMode::Nearest);
        
         let texture_library: HashMap<TextureName, Texture2D> = HashMap::from([
             (TextureName::Background, background_texture),
             (TextureName::Ground, ground_texture),
             (TextureName::Hero, hero_texture),
             (TextureName::ParticleOne, particle_one_texture),
-            (TextureName::Light, light_texture)
+            (TextureName::Light, light_texture),
+            (TextureName::Ghost, ghost_texture),
         ]);
 
         let mut particles = Vec::new();
@@ -69,17 +76,29 @@ impl Game {
             Light::new(330.0, 70.0, 30.0),
         ];
 
+        let mut monsters = Vec::new();
+
+        for i in 0..5 {
+            let m = Ghost::new(gen_range(50.0, 380.0), 52.0);
+            monsters.push(m);
+        }
 
         Self {
             texture_library,
             hero: Hero::new(0.0, 0.0),
             particles,
             lights,
+            monsters,
         }
 
     }
     pub fn update(&mut self) {
         self.hero.update();
+
+        for monster in self.monsters.iter_mut() {
+            monster.update(self.hero.position);
+        }
+
         for part in self.particles.iter_mut() {
             part.update();
         }
@@ -128,8 +147,19 @@ impl Game {
 
         }
 
+
+
         // The hero and thes monsters
+        for monster in self.monsters.iter_mut() {
+            let texture = self.texture_library.get(&TextureName::Ghost).expect("No texture in library").clone();
+            monster.sprite.draw_sprite(texture, Vec2::ZERO, 1.0);
+        }
+
         self.hero.sprite.draw_sprite(self.get_texture(TextureName::Hero), Vec2::ZERO, 1.0);
+        self.hero.debug_hitbox();
+
+
+
 
         // The ground to hide some lights
         let bg_params = DrawTextureParams {
@@ -149,7 +179,7 @@ impl Game {
 
 
 
-        //self.debug_info();
+        self.debug_info();
 
     }
 
@@ -157,6 +187,11 @@ impl Game {
         // debug rendering
         let h_box = self.hero.get_collision_box(0.0, 0.0);
         draw_rectangle_lines(h_box.x , h_box.y, h_box.w , h_box.h , 1.0, RED);
+
+        for m in self.monsters.iter() {
+            let m_box = m.get_collision_box(0.0, 0.0);
+            draw_rectangle_lines(m_box.x , m_box.y, m_box.w , m_box.h , 1.0, RED);
+        }
         
         set_default_camera();    
         draw_text(&format!("position: {} / {}", self.hero.position.x, self.hero.position.y), 16.0, 32.0, 24.0, RED);

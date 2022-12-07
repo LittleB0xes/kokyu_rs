@@ -3,6 +3,7 @@ use game:: Game;
 
 mod game;
 mod hero;
+mod ghost;
 mod sprite;
 mod particle;
 mod light;
