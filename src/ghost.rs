@@ -20,7 +20,9 @@ pub struct Ghost {
     collision_box: Rect,
     state: MonsterState,
     animations: HashMap<MonsterState, AnimationData>,
-    velocity: Vec2,
+
+    hitable: bool,
+    hited: bool,
 
     
 }
@@ -43,12 +45,14 @@ impl Ghost {
 
         Self {
             position,
-            velocity: Vec2::ZERO,
             state,
             animations,
             sprite,
             collision_box: Rect { x: 26.0, y: 19.0, w: 14.0, h: 22.0 },
-            direction: 0.0
+            direction: 0.0,
+
+            hitable:false,
+            hited: false,
         }
 
     }
@@ -68,14 +72,25 @@ impl Ghost {
 
     fn state_manager(&mut self) {
         let previous_state = self.state;
+
+        if self.hited {self.state = MonsterState::Hit}
+
         match self.state {
             MonsterState::Birth => {
                 if self.sprite.is_animation_ended() {
                     self.state = MonsterState::Idle;
+                    self.hitable = true;
                 }
             },
             MonsterState::Idle => {},
-            MonsterState::Hit => {},
+            MonsterState::Hit => {
+                self.hitable = false;
+                self.hited = false;
+                if self.sprite.is_animation_ended() {
+                    self.state = MonsterState::Idle;
+                    self.hitable = true;
+                }
+            },
             MonsterState::Death => {}
 
         }
@@ -94,5 +109,12 @@ impl Ghost {
     
     pub fn get_collision_box(&self, dx: f32, dy: f32) -> Rect {
         Rect { x: self.position.x + self.collision_box.x + dx, y: self.position.y + self.collision_box.y + dy, w: self.collision_box.w, h: self.collision_box.h }
+    }
+
+    pub fn hit(&mut self) {
+        self.hited = true;
+    }
+    pub fn is_hitable(&self) -> bool {
+        self.hitable
     }
 }

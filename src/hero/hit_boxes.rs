@@ -1,6 +1,6 @@
 use macroquad::prelude::Rect;
 
-
+#[derive(Debug)]
 pub enum AttackType {
     Heavy,
     Double,

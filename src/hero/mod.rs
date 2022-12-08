@@ -53,7 +53,7 @@ impl Hero {
             (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::AttackDouble, AnimationData{x: 0, y: 384, h: 64, w: 64, frames: 19, speed: 1, pivot_x: 0, pivot_y: 0}),
             (State::AttackOne, AnimationData{x: 0, y: 448, h: 64, w: 64, frames: 17, speed: 4, pivot_x: 0, pivot_y: 0}),
-            (State::Hit, AnimationData{x: 0, y: 512, h: 64, w: 64, frames: 7, speed: 2, pivot_x: 0, pivot_y: 0}),
+            (State::Hit, AnimationData{x: 128, y: 512, h: 64, w: 64, frames: 5, speed: 2, pivot_x: 0, pivot_y: 0}),
         ]);
 
         let state = State::Idle;
@@ -81,68 +81,88 @@ impl Hero {
 
         self.hited = false;
         for monster in monsters.iter_mut() {
-            // Check body to body collision
-            if self.get_collision_box(0.0, 0.0).overlaps(&monster.get_collision_box(0.0, 0.0)) {
-                self.hited = true;
-                let bump_dir = (monster.position - self.position).normalize();
-                self.velocity = -6.0 * bump_dir;
+
+            if let Some(attack) = &self.attack {
+                match self.get_hit_box(attack) {
+                    Some(hbox) => {
+                        if monster.is_hitable() && monster.get_collision_box(0.0, 0.0).overlaps(&hbox) {
+                            println!("Hit Monster");
+                            monster.hit();
+                        }
+
+                    },
+                    None => {}
+                }
 
             }
-        }
+
+            // Check body to body collision
+            else if monster.is_hitable() && self.state != State::Hit && self.get_collision_box(0.0, 0.0).overlaps(&monster.get_collision_box(0.0, 0.0)) {
+                self.hited = true;
+                let bump_dir = (monster.position - self.position).normalize();
+                self.velocity = -8.0 * bump_dir;
+            }
 
 
-
-        // Gravity
-        self.velocity.y += 0.5;
-
-        self.direction = controls::get_x_axis();
-
-        
-
-        if let Some(AttackType::AttackDash { timer: _, dir }) = &self.attack {
-            self.direction = *dir;
-            self.velocity.x = self.direction * 6.0;
-        }
-        else if let Some(AttackType::AttackAirDash { timer: _, dir }) = &self.attack {
-            self.direction = *dir;
-            self.velocity.x = self.direction * 8.0;
-        }
-
-        else if self.state != State::Hit && self.direction != 0.0 {
-            self.velocity.x = self.direction * 2.0;
-        }
-        else {
-            self.velocity.x *= 0.8;
-        }
-
-
-        if self.on_the_floor && is_key_pressed(KeyCode::Space) {
-            // Jump
-            self.velocity.y = -8.0;
-            self.on_the_floor = false;
-        }
-
-        match self.attack {
-            None => {
-                if is_key_pressed(KeyCode::V) {
-                    if self.direction != 0.0 && self.on_the_floor {
-                        self.attack = Some(AttackType::AttackDash{timer: 10, dir: self.direction});
-                    }
-                    else if self.direction != 0.0 && !self.on_the_floor {
-                        self.attack = Some(AttackType::AttackAirDash{timer: 10, dir: self.direction});
-
-                    }
-                    else {
-                        self.attack = Some(AttackType::Double);
-                    }
-                }
-                if is_key_pressed(KeyCode::C) {self.attack = Some(AttackType::Heavy)}
-            },
-            Some(_) => {}
         }
 
 
         self.state_manager();
+
+        // Gravity
+        self.velocity.y += 0.5;
+
+        if self.state != State::Hit {
+            self.direction = controls::get_x_axis();
+
+            if let Some(AttackType::AttackDash { timer: _, dir }) = &self.attack {
+                self.direction = *dir;
+                self.velocity.x = self.direction * 6.0;
+            }
+            else if let Some(AttackType::AttackAirDash { timer: _, dir }) = &self.attack {
+                self.direction = *dir;
+                self.velocity.x = self.direction * 8.0;
+            }
+
+            else if self.direction != 0.0 {
+                self.velocity.x = self.direction * 2.0;
+            }
+            else {
+                self.velocity.x *= 0.8;
+            }
+
+
+            if self.on_the_floor && is_key_pressed(KeyCode::Space) {
+                // Jump
+                self.velocity.y = -8.0;
+                self.on_the_floor = false;
+            }
+
+            match self.attack {
+                None => {
+                    if is_key_pressed(KeyCode::V) {
+                        if self.direction != 0.0 && self.on_the_floor {
+                            self.attack = Some(AttackType::AttackDash{timer: 10, dir: self.direction});
+                        }
+                        else if self.direction != 0.0 && !self.on_the_floor {
+                            self.attack = Some(AttackType::AttackAirDash{timer: 10, dir: self.direction});
+
+                        }
+                        else {
+                            self.attack = Some(AttackType::Double);
+                        }
+                    }
+                    if is_key_pressed(KeyCode::C) {self.attack = Some(AttackType::Heavy)}
+                },
+                Some(_) => {}
+            }
+        }
+        else {
+            self.velocity *= 0.7;
+        }
+
+
+
         if self.get_collision_box(0.0, self.velocity.y).overlaps(&Rect{x: 0.0, y: 101.0, w: 426.0, h: 16.0}){
             self.velocity.y = 0.0;
             self.on_the_floor = true;
@@ -288,6 +308,20 @@ impl Hero {
 
     pub fn get_collision_box(&self, dx: f32, dy: f32) -> Rect {
         Rect { x: self.position.x + self.collision_box.x + dx, y: self.position.y + self.collision_box.y + dy, w: self.collision_box.w, h: self.collision_box.h }
+    }
+
+    pub fn get_hit_box(&self, attack: &AttackType) -> Option<Rect> {
+        match get_hit_box(&attack, self.sprite.current_frame, self.sprite.flip_x) {
+            Some(hbox) => {
+                Some(Rect{
+                    x: hbox.x + self.position.x,
+                    y: hbox.y + self.position.y,
+                    w: hbox.w,
+                    h: hbox.h
+                })
+            },
+            _ => None
+        }
     }
 
     pub fn debug_hitbox(&self) {
