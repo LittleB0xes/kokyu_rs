@@ -13,6 +13,11 @@ enum MonsterState {
 
 }
 
+enum Behaviour {
+    UpDown {center: Vec2, speed: f32},
+    StandBy,
+}
+
 pub struct Ghost {
     pub position: Vec2,
     pub sprite: AnimatedSprite,
@@ -20,6 +25,8 @@ pub struct Ghost {
     collision_box: Rect,
     state: MonsterState,
     animations: HashMap<MonsterState, AnimationData>,
+
+    behaviour: Behaviour,
 
     health: i32,
 
@@ -54,6 +61,8 @@ impl Ghost {
             collision_box: Rect { x: 25.0, y: 19.0, w: 15.0, h: 22.0 },
             direction: 0.0,
 
+            behaviour: Behaviour::StandBy,
+
             health: 3,
 
             hitable:false,
@@ -75,6 +84,11 @@ impl Ghost {
         }
 
         self.state_manager();
+    }
+
+
+    fn brain(&mut self) {
+        
     }
 
     fn state_manager(&mut self) {

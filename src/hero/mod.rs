@@ -78,7 +78,7 @@ impl Hero {
         }
     }
 
-    pub fn update(&mut self, monsters: &mut Vec<Ghost>) {
+    pub fn update(&mut self, monsters: &mut Vec<Ghost>, colliders: &Vec<Rect>) {
         // Check monster collision
 
         self.hited = false;
@@ -177,10 +177,16 @@ impl Hero {
         }
 
 
+        // Check collision with scene
+        for collider in colliders.iter() {
+            if self.get_collision_box(0.0, self.velocity.y).overlaps(collider){
+                self.velocity.y = 0.0;
+                self.on_the_floor = true;
+            }
+            if self.get_collision_box(self.velocity.x, 0.0).overlaps(collider){
+                self.velocity.x = 0.0;
+            }
 
-        if self.get_collision_box(0.0, self.velocity.y).overlaps(&Rect{x: 0.0, y: 101.0, w: 426.0, h: 16.0}){
-            self.velocity.y = 0.0;
-            self.on_the_floor = true;
         }
         // position update
         self.position += self.velocity;

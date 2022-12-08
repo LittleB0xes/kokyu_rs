@@ -24,6 +24,7 @@ pub struct Game {
     max_monsters: i32,
     monster_timer: i32,
     monsters: Vec<Ghost>,
+    colliders: Vec<Rect>,
     lights: [Light; 6],
     hero: Hero,
 }
@@ -86,6 +87,13 @@ impl Game {
         let mut monsters = Vec::new();
 
 
+        // Level collider (Ground, left and right wall)
+        let colliders = vec![
+            Rect{x: 0.0, y: 101.0, w: 426.0, h: 16.0},      // Ground
+            Rect{x: -16.0, y: 0.0, w: 16.0, h: 112.0},      // Left border
+            Rect{x: 426.0, y: 0.0, w: 16.0, h: 112.0},      // Right border
+
+        ];
 
 
         Self {
@@ -94,6 +102,7 @@ impl Game {
             particles,
             lights,
             max_monsters,
+            colliders,
             monster_timer,
             monsters,
         }
@@ -110,7 +119,7 @@ impl Game {
         self.monsters.retain(|m| m.is_active());
 
 
-        self.hero.update(&mut self.monsters);
+        self.hero.update(&mut self.monsters, &self.colliders);
 
         for monster in self.monsters.iter_mut() {
             monster.update(self.hero.position);
