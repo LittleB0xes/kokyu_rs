@@ -84,12 +84,9 @@ impl Game {
         let monster_timer = 5;
         // Create empty vec for monster
         let mut monsters = Vec::new();
-        
 
-        //for i in 0..5 {
-        //    let m = Ghost::new(gen_range(50.0, 380.0), 52.0);
-        //    monsters.push(m);
-        //}
+
+
 
         Self {
             texture_library,
@@ -126,6 +123,13 @@ impl Game {
         for light in self.lights.iter_mut() {
             light.update();
         }
+    }
+
+    fn reset_game(&mut self) {
+        self.max_monsters = 5;
+        self.monsters = Vec::new();
+        self.monster_timer = 5;
+        self.hero = Hero::new(0.0, 0.0);
     }
 
     fn monster_incubator(&mut self) {
@@ -203,14 +207,17 @@ impl Game {
 
         // Letterbox mask (to avoid some artifact)
         draw_rectangle(0.0, -64.0, 426.0, 64.0, BLACK);
-        draw_rectangle(0.0, 176.0, 426.0, 64.0, BLACK);
+        draw_rectangle(0.0, 112.0, 426.0, 64.0, BLACK);
 
 
         self.debug_info();
 
     }
 
-    fn debug_info(&self) {
+    fn debug_info(&mut self) {
+        // Reset game
+        if is_key_pressed(KeyCode::Tab) {self.reset_game()}
+
         // debug rendering
         let h_box = self.hero.get_collision_box(0.0, 0.0);
         draw_rectangle_lines(h_box.x , h_box.y, h_box.w , h_box.h , 1.0, RED);

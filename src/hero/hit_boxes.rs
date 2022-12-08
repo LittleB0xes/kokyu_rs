@@ -4,6 +4,7 @@ use macroquad::prelude::Rect;
 pub enum AttackType {
     Heavy,
     Double,
+    RepeatHeavy,
     AttackDash{timer: i32, dir: f32},
     AttackAirDash{timer: i32, dir: f32},
 }
@@ -12,6 +13,7 @@ pub fn get_hit_point(attack: &AttackType) -> i32 {
     match attack {
         AttackType::Double | AttackType::AttackAirDash { timer: _, dir: _ } | AttackType::AttackDash { timer: _, dir: _} => 1,
         AttackType::Heavy => 2,
+        AttackType::RepeatHeavy => 2,
     }
 }
 
@@ -25,6 +27,12 @@ pub fn get_hit_box(attack: &AttackType, frame: i32, flip_x: bool) -> Option<Rect
             }
         },
         AttackType::Heavy => {
+            match frame {
+                12|13|14 => Some(Rect { x: 34.0, y: 4.0, w: 27.0, h: 44.0 }),
+                _ => None,
+            }
+        },
+        AttackType::RepeatHeavy => {
             match frame {
                 12|13|14 => Some(Rect { x: 34.0, y: 4.0, w: 27.0, h: 44.0 }),
                 _ => None,

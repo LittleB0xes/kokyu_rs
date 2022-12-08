@@ -18,7 +18,7 @@ enum State {
     Jump,
     AttackOne,
     AttackDouble,
-    //RepeatAttack,
+    RepeatAttack,
     Dash,
     AirDash,
     Dead,
@@ -51,9 +51,9 @@ impl Hero {
             (State::Walk, AnimationData{x: 0, y: 128, h: 64, w: 64, frames: 8, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::Idle, AnimationData{x: 0, y: 192, h: 64, w: 64, frames: 8, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 0}),
-            (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::AttackDouble, AnimationData{x: 0, y: 384, h: 64, w: 64, frames: 19, speed: 1, pivot_x: 0, pivot_y: 0}),
             (State::AttackOne, AnimationData{x: 0, y: 448, h: 64, w: 64, frames: 17, speed: 4, pivot_x: 0, pivot_y: 0}),
+            (State::RepeatAttack, AnimationData{x: 640, y: 448, h: 64, w: 64, frames: 7, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::Hit, AnimationData{x: 128, y: 512, h: 64, w: 64, frames: 5, speed: 2, pivot_x: 0, pivot_y: 0}),
         ]);
 
@@ -142,7 +142,8 @@ impl Hero {
                 self.on_the_floor = false;
             }
 
-            match self.attack {
+            // Attack and combo management
+            match &self.attack {
                 None => {
                     if is_key_pressed(KeyCode::V) {
                         if self.direction != 0.0 && self.on_the_floor {
@@ -158,7 +159,17 @@ impl Hero {
                     }
                     if is_key_pressed(KeyCode::C) {self.attack = Some(AttackType::Heavy)}
                 },
-                Some(_) => {}
+                Some(attack) => {
+                    match attack {
+                        AttackType::Heavy => {
+                            if self.sprite.current_frame > 13 && is_key_pressed(KeyCode::C){
+                                self.attack = Some(AttackType::RepeatHeavy)
+                            }
+                        }
+                        _ => {}
+                    }
+
+                }
             }
         }
         else {
@@ -249,7 +260,14 @@ impl Hero {
                 }
             },
             
-            State::AttackOne => {
+            State::AttackOne | State::RepeatAttack => {
+                if let Some(attack) = &self.attack {
+                    match attack {
+                        AttackType::RepeatHeavy => self.state = State::RepeatAttack,
+                        _ => {}
+                    }
+                    
+                }
                 self.velocity.x = 0.0;
                 if self.sprite.is_animation_ended() {
                     self.state = State::Idle;
