@@ -93,7 +93,7 @@ impl Game {
 
     }
     pub fn update(&mut self) {
-        self.hero.update();
+        self.hero.update(&mut self.monsters);
 
         for monster in self.monsters.iter_mut() {
             monster.update(self.hero.position);

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::sprite::{AnimationData, AnimatedSprite};
 use crate::controls;
-
+use crate::ghost::Ghost;
 use hit_boxes::AttackType;
 
 use self::hit_boxes::get_hit_box;
@@ -21,7 +21,8 @@ enum State {
     //RepeatAttack,
     Dash,
     AirDash,
-    //Dead,
+    Dead,
+    Hit
 }
 
 
@@ -36,6 +37,7 @@ pub struct Hero {
     collision_box: Rect,
 
     on_the_floor: bool,
+    hited: bool,
     attack: Option<AttackType>
 }
 
@@ -51,6 +53,7 @@ impl Hero {
             (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::AttackDouble, AnimationData{x: 0, y: 384, h: 64, w: 64, frames: 19, speed: 1, pivot_x: 0, pivot_y: 0}),
             (State::AttackOne, AnimationData{x: 0, y: 448, h: 64, w: 64, frames: 17, speed: 4, pivot_x: 0, pivot_y: 0}),
+            (State::Hit, AnimationData{x: 0, y: 512, h: 64, w: 64, frames: 7, speed: 2, pivot_x: 0, pivot_y: 0}),
         ]);
 
         let state = State::Idle;
@@ -68,11 +71,27 @@ impl Hero {
             collision_box: Rect { x: 27.0, y: 28.0, w: 10.0, h: 20.0 },
 
             on_the_floor: false,
+            hited: false,
             attack: None,
         }
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, monsters: &mut Vec<Ghost>) {
+        // Check monster collision
+
+        self.hited = false;
+        for monster in monsters.iter_mut() {
+            // Check body to body collision
+            if self.get_collision_box(0.0, 0.0).overlaps(&monster.get_collision_box(0.0, 0.0)) {
+                self.hited = true;
+                let bump_dir = (monster.position - self.position).normalize();
+                self.velocity = -6.0 * bump_dir;
+
+            }
+        }
+
+
+
         // Gravity
         self.velocity.y += 0.5;
 
@@ -89,7 +108,7 @@ impl Hero {
             self.velocity.x = self.direction * 8.0;
         }
 
-        else if self.direction != 0.0 {
+        else if self.state != State::Hit && self.direction != 0.0 {
             self.velocity.x = self.direction * 2.0;
         }
         else {
@@ -138,7 +157,11 @@ impl Hero {
 
     fn state_manager(&mut self) {
 
+
         let previous_state = self.state;
+
+        if self.hited {self.state = State::Hit}
+
         match self.state {
             State::Idle => {
                 if self.direction != 0.0 {
@@ -237,7 +260,16 @@ impl Hero {
                     }
                 }
 
-            }
+            },
+
+            State::Hit => {
+                self.state = State::Hit;
+                if self.sprite.is_animation_ended() {
+                    self.state = State::Idle;
+                    self.hited = false;
+                }
+            },
+            State::Dead => {},
         }
 
         if self.direction == 1.0 {
