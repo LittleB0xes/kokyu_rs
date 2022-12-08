@@ -54,7 +54,7 @@ impl Ghost {
             collision_box: Rect { x: 25.0, y: 19.0, w: 15.0, h: 22.0 },
             direction: 0.0,
 
-            health: 1,
+            health: 3,
 
             hitable:false,
             hited: false,
@@ -96,6 +96,11 @@ impl Ghost {
                 if self.sprite.is_animation_ended() {
                     self.state = MonsterState::Idle;
                     self.hitable = true;
+
+                    if self.health <= 0 {
+                        self.state = MonsterState::Dead;
+                        self.hitable = false;
+                    }
                 }
             },
             MonsterState::Dead => {
@@ -114,8 +119,8 @@ impl Ghost {
         }
 
 
-        if self.health <= 0 {self.state = MonsterState::Dead}
-        else if self.hited {self.state = MonsterState::Hit}
+        //if self.health <= 0 {self.state = MonsterState::Dead}
+        if self.hited {self.state = MonsterState::Hit}
 
 
         if previous_state != self.state {
@@ -128,10 +133,10 @@ impl Ghost {
         Rect { x: self.position.x + self.collision_box.x + dx, y: self.position.y + self.collision_box.y + dy, w: self.collision_box.w, h: self.collision_box.h }
     }
 
-    pub fn hit(&mut self) {
+    pub fn hit(&mut self, value: i32) {
         self.hited = true;
         self.hitable = false;
-        self.health -= 1;
+        self.health -= value;
     }
     pub fn is_hitable(&self) -> bool {
         self.hitable

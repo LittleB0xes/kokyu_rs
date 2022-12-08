@@ -8,6 +8,13 @@ pub enum AttackType {
     AttackAirDash{timer: i32, dir: f32},
 }
 
+pub fn get_hit_point(attack: &AttackType) -> i32 {
+    match attack {
+        AttackType::Double | AttackType::AttackAirDash { timer: _, dir: _ } | AttackType::AttackDash { timer: _, dir: _} => 1,
+        AttackType::Heavy => 2,
+    }
+}
+
 pub fn get_hit_box(attack: &AttackType, frame: i32, flip_x: bool) -> Option<Rect> {
     let h_box = match attack {
         AttackType::Double => {
@@ -23,7 +30,7 @@ pub fn get_hit_box(attack: &AttackType, frame: i32, flip_x: bool) -> Option<Rect
                 _ => None,
             }
         },
-        AttackType::AttackDash { timer: _, dir: _ } | &AttackType::AttackAirDash { timer: _, dir: _ }=> {
+        AttackType::AttackDash {timer: _, dir: _ } | &AttackType::AttackAirDash {timer: _, dir: _ }=> {
             Some(Rect { x: 36.0, y: 32.0, w: 11.0, h: 14.0 })
         },
     };

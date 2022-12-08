@@ -7,7 +7,7 @@ use crate::controls;
 use crate::ghost::Ghost;
 use hit_boxes::AttackType;
 
-use self::hit_boxes::get_hit_box;
+use self::hit_boxes::{get_hit_box, get_hit_point};
 
 mod hit_boxes;
 
@@ -88,7 +88,7 @@ impl Hero {
                 match self.get_hit_box(attack) {
                     Some(hbox) => {
                         if monster.is_hitable() && monster.get_collision_box(0.0, 0.0).overlaps(&hbox) {
-                            monster.hit();
+                            monster.hit(get_hit_point(&attack));
                         }
 
                     },
@@ -115,7 +115,7 @@ impl Hero {
 
         if self.state != State::Hit {
             self.direction = controls::get_x_axis();
-
+            
             if let Some(AttackType::AttackDash { timer: _, dir }) = &self.attack {
                 self.direction = *dir;
                 self.velocity.x = self.direction * 6.0;
@@ -123,8 +123,11 @@ impl Hero {
             else if let Some(AttackType::AttackAirDash { timer: _, dir }) = &self.attack {
                 self.direction = *dir;
                 self.velocity.x = self.direction * 8.0;
+            } 
+            else if let Some(AttackType::Heavy) = &self.attack {
+                self.direction = 0.0;
+                self.velocity.x = 0.0
             }
-
             else if self.direction != 0.0 {
                 self.velocity.x = self.direction * 2.0;
             }

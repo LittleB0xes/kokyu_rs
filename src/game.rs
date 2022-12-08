@@ -21,6 +21,8 @@ enum TextureName{
 pub struct Game {
     texture_library: HashMap<TextureName, Texture2D>,
     particles: Vec<Particle>,
+    max_monsters: i32,
+    monster_timer: i32,
     monsters: Vec<Ghost>,
     lights: [Light; 6],
     hero: Hero,
@@ -76,23 +78,37 @@ impl Game {
             Light::new(330.0, 70.0, 30.0),
         ];
 
-        let mut monsters = Vec::new();
+        let max_monsters = 5;
 
-        for i in 0..5 {
-            let m = Ghost::new(gen_range(50.0, 380.0), 52.0);
-            monsters.push(m);
-        }
+        // Delay for the first birth
+        let monster_timer = 5;
+        // Create empty vec for monster
+        let mut monsters = Vec::new();
+        
+
+        //for i in 0..5 {
+        //    let m = Ghost::new(gen_range(50.0, 380.0), 52.0);
+        //    monsters.push(m);
+        //}
 
         Self {
             texture_library,
             hero: Hero::new(0.0, 0.0),
             particles,
             lights,
+            max_monsters,
+            monster_timer,
             monsters,
         }
 
     }
     pub fn update(&mut self) {
+        self.monster_timer -= 1;
+        if self.max_monsters > 0 && self.monster_timer == 0{
+            self.monster_incubator();
+            self.max_monsters -= 1;
+            self.monster_timer = 20 + gen_range(30, 60);
+        }
         // Clean the monster list and remove all dead monster
         self.monsters.retain(|m| m.is_active());
 
@@ -110,6 +126,11 @@ impl Game {
         for light in self.lights.iter_mut() {
             light.update();
         }
+    }
+
+    fn monster_incubator(&mut self) {
+        let m = Ghost::new(gen_range(50.0, 380.0), 52.0);
+        self.monsters.push(m);
     }
 
     /// An ugly experimental empiric camera setting function
@@ -160,7 +181,6 @@ impl Game {
         }
 
         self.hero.sprite.draw_sprite(self.get_texture(TextureName::Hero), Vec2::ZERO, 1.0);
-        self.hero.debug_hitbox();
 
 
 
@@ -186,7 +206,7 @@ impl Game {
         draw_rectangle(0.0, 176.0, 426.0, 64.0, BLACK);
 
 
-        //self.debug_info();
+        self.debug_info();
 
     }
 
@@ -194,6 +214,9 @@ impl Game {
         // debug rendering
         let h_box = self.hero.get_collision_box(0.0, 0.0);
         draw_rectangle_lines(h_box.x , h_box.y, h_box.w , h_box.h , 1.0, RED);
+
+        // Hero hitbox
+        self.hero.debug_hitbox();
 
         for m in self.monsters.iter() {
             let m_box = m.get_collision_box(0.0, 0.0);
