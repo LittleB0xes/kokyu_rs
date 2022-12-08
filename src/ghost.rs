@@ -8,7 +8,7 @@ use crate::sprite::{AnimatedSprite, AnimationData};
 enum MonsterState {
     Idle,
     Birth,
-    Death,
+    Dead,
     Hit,
 
 }
@@ -21,7 +21,10 @@ pub struct Ghost {
     state: MonsterState,
     animations: HashMap<MonsterState, AnimationData>,
 
+    health: i32,
+
     hitable: bool,
+    active: bool,
     hited: bool,
 
     
@@ -33,7 +36,7 @@ impl Ghost {
         let animations = HashMap::from([
             (MonsterState::Idle, AnimationData{x: 0, y: 0, h: 64, w: 64, frames: 5, speed: 8, pivot_x: 0, pivot_y: 0}),
             (MonsterState::Hit, AnimationData{x: 0, y: 64, h: 64, w: 64, frames: 10, speed: 4, pivot_x: 0, pivot_y: 0}),
-            (MonsterState::Death, AnimationData{x: 0, y: 128, h: 64, w: 64, frames: 10, speed: 8, pivot_x: 0, pivot_y: 0}),
+            (MonsterState::Dead, AnimationData{x: 0, y: 128, h: 64, w: 64, frames: 10, speed: 8, pivot_x: 0, pivot_y: 0}),
             (MonsterState::Birth, AnimationData{x: 0, y: 192, h: 64, w: 64, frames: 13, speed: 8, pivot_x: 0, pivot_y: 0}),
 
 
@@ -48,11 +51,15 @@ impl Ghost {
             state,
             animations,
             sprite,
-            collision_box: Rect { x: 26.0, y: 19.0, w: 14.0, h: 22.0 },
+            collision_box: Rect { x: 25.0, y: 19.0, w: 15.0, h: 22.0 },
             direction: 0.0,
+
+            health: 1,
 
             hitable:false,
             hited: false,
+
+            active: true,
         }
 
     }
@@ -73,7 +80,7 @@ impl Ghost {
     fn state_manager(&mut self) {
         let previous_state = self.state;
 
-        if self.hited {self.state = MonsterState::Hit}
+        
 
         match self.state {
             MonsterState::Birth => {
@@ -91,7 +98,12 @@ impl Ghost {
                     self.hitable = true;
                 }
             },
-            MonsterState::Death => {}
+            MonsterState::Dead => {
+                self.hitable = false;
+                if self.sprite.is_animation_ended() {
+                    self.active = false;
+                }
+            }
 
         }
         if self.direction == 1.0 {
@@ -100,6 +112,11 @@ impl Ghost {
         else if self.direction == -1.0 {
             self.sprite.flip_x = true;
         }
+
+
+        if self.health <= 0 {self.state = MonsterState::Dead}
+        else if self.hited {self.state = MonsterState::Hit}
+
 
         if previous_state != self.state {
             self.sprite.set_animation(self.animations.get(&self.state).expect("No animation"));
@@ -113,8 +130,14 @@ impl Ghost {
 
     pub fn hit(&mut self) {
         self.hited = true;
+        self.hitable = false;
+        self.health -= 1;
     }
     pub fn is_hitable(&self) -> bool {
         self.hitable
+    }
+
+    pub fn is_active(&self) -> bool {
+        self.active
     }
 }

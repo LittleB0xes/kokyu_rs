@@ -38,6 +38,7 @@ pub struct Hero {
 
     on_the_floor: bool,
     hited: bool,
+    hitable: bool,
     attack: Option<AttackType>
 }
 
@@ -72,6 +73,7 @@ impl Hero {
 
             on_the_floor: false,
             hited: false,
+            hitable: true,
             attack: None,
         }
     }
@@ -86,7 +88,6 @@ impl Hero {
                 match self.get_hit_box(attack) {
                     Some(hbox) => {
                         if monster.is_hitable() && monster.get_collision_box(0.0, 0.0).overlaps(&hbox) {
-                            println!("Hit Monster");
                             monster.hit();
                         }
 
@@ -180,7 +181,11 @@ impl Hero {
 
         let previous_state = self.state;
 
-        if self.hited {self.state = State::Hit}
+        if self.hited {
+            self.state = State::Hit;
+            self.hitable = false;
+            self.hited = false;
+        }
 
         match self.state {
             State::Idle => {
@@ -283,10 +288,10 @@ impl Hero {
             },
 
             State::Hit => {
-                self.state = State::Hit;
                 if self.sprite.is_animation_ended() {
                     self.state = State::Idle;
                     self.hited = false;
+                    self.hitable = true;
                 }
             },
             State::Dead => {},

@@ -93,6 +93,10 @@ impl Game {
 
     }
     pub fn update(&mut self) {
+        // Clean the monster list and remove all dead monster
+        self.monsters.retain(|m| m.is_active());
+
+
         self.hero.update(&mut self.monsters);
 
         for monster in self.monsters.iter_mut() {
@@ -182,7 +186,7 @@ impl Game {
         draw_rectangle(0.0, 176.0, 426.0, 64.0, BLACK);
 
 
-        self.debug_info();
+        //self.debug_info();
 
     }
 
@@ -193,11 +197,18 @@ impl Game {
 
         for m in self.monsters.iter() {
             let m_box = m.get_collision_box(0.0, 0.0);
-            draw_rectangle_lines(m_box.x , m_box.y, m_box.w , m_box.h , 1.0, RED);
+            if m.is_hitable() {
+
+                draw_rectangle_lines(m_box.x , m_box.y, m_box.w , m_box.h , 1.0, RED);
+            }
+            else {
+                draw_rectangle_lines(m_box.x , m_box.y, m_box.w , m_box.h , 1.0, GREEN);
+
+            }
         }
         
-        set_default_camera();    
-        draw_text(&format!("position: {} / {}", self.hero.position.x, self.hero.position.y), 16.0, 32.0, 24.0, RED);
+        //set_default_camera();    
+        //draw_text(&format!("position: {} / {}", self.hero.position.x, self.hero.position.y), 16.0, 32.0, 24.0, RED);
 
     } 
 
