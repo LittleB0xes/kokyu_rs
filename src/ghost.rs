@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use macroquad::prelude::*;
+use macroquad::{prelude::*, rand::gen_range};
 
 use crate::sprite::{AnimatedSprite, AnimationData};
 
@@ -10,16 +10,16 @@ enum MonsterState {
     Birth,
     Dead,
     Hit,
-
 }
 
 enum Behaviour {
-    UpDown {center: Vec2, speed: f32},
+    UpDown {yo: f32, speed: f32, dt: f32},
     StandBy,
 }
 
 pub struct Ghost {
     pub position: Vec2,
+    pub velocity: Vec2,
     pub sprite: AnimatedSprite,
     direction: f32,
     collision_box: Rect,
@@ -55,6 +55,7 @@ impl Ghost {
 
         Self {
             position,
+            velocity: Vec2::ZERO,
             state,
             animations,
             sprite,
@@ -77,10 +78,6 @@ impl Ghost {
 
         self.brain(hero_pos);
 
-        match self.behaviour {
-            Behaviour::StandBy => {},
-            Behaviour::UpDown { center: _, speed: _ } => {}
-        }
 
         // Look in the right direction
         if self.position.x > hero_pos.x {
@@ -91,20 +88,33 @@ impl Ghost {
         }
 
         self.state_manager();
+
+        self.position += self.velocity;
+        self.sprite.set_position_to(self.position);
     }
 
 
     fn brain(&mut self, hero_pos: Vec2) {
+        if self.state == MonsterState::Idle {
+            match self.behaviour {
+                Behaviour::StandBy => {
+                    if gen_range(0, 100) < 2 {
+                        self.behaviour = Behaviour::UpDown { yo: self.position.y, speed: 0.01, dt: 0.0 };
+                    }
+                },
+                Behaviour::UpDown { yo, speed, dt } => {
+                    self.position.y = yo + 15.0 * dt.sin();
+                    self.behaviour = Behaviour::UpDown { yo, speed: 0.01, dt: dt + speed };
+                }
+            }
 
+        } 
         
     }
 
     fn state_manager(&mut self) {
         let previous_state = self.state;
-
-        
-
-        match self.state {
+         match self.state {
             MonsterState::Birth => {
                 if self.sprite.is_animation_ended() {
                     self.state = MonsterState::Idle;

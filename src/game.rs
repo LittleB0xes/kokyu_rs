@@ -230,6 +230,8 @@ impl Game {
 
         // And the health bar
         draw_texture(self.get_texture(TextureName::HealthDeco), 81.0, -48.0, WHITE);
+
+        // Health bar
         draw_texture(self.get_texture(TextureName::HealthBar), 85.0, -36.0, WHITE);
 
 
