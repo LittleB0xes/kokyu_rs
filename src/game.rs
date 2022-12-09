@@ -11,6 +11,8 @@ use crate::ghost::Ghost;
 #[derive(Eq, PartialEq, Hash)]
 enum TextureName{
     Background,
+    HealthDeco,
+    HealthBar,
     Ground,
     Ghost,
     ParticleOne,
@@ -55,6 +57,12 @@ impl Game {
         let ghost_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/MonsterOne.png"), None);
         ghost_texture.set_filter(FilterMode::Nearest);
        
+        let health_container_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/Health_deco.png"), None);
+        health_container_texture.set_filter(FilterMode::Nearest);
+        
+        let health_bar_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/Health_bar.png"), None);
+        health_bar_texture.set_filter(FilterMode::Nearest);
+        
         let texture_library: HashMap<TextureName, Texture2D> = HashMap::from([
             (TextureName::Background, background_texture),
             (TextureName::Ground, ground_texture),
@@ -62,6 +70,8 @@ impl Game {
             (TextureName::ParticleOne, particle_one_texture),
             (TextureName::Light, light_texture),
             (TextureName::Ghost, ghost_texture),
+            (TextureName::HealthDeco, health_container_texture),
+            (TextureName::HealthBar, health_bar_texture),
         ]);
 
         let mut particles = Vec::new();
@@ -217,6 +227,11 @@ impl Game {
         // Letterbox mask (to avoid some artifact)
         draw_rectangle(0.0, -64.0, 426.0, 64.0, BLACK);
         draw_rectangle(0.0, 112.0, 426.0, 64.0, BLACK);
+
+        // And the health bar
+        draw_texture(self.get_texture(TextureName::HealthDeco), 81.0, -48.0, WHITE);
+        draw_texture(self.get_texture(TextureName::HealthBar), 85.0, -36.0, WHITE);
+
 
 
         self.debug_info();

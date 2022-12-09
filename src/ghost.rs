@@ -75,6 +75,13 @@ impl Ghost {
 
     pub fn update(&mut self, hero_pos: Vec2) {
 
+        self.brain(hero_pos);
+
+        match self.behaviour {
+            Behaviour::StandBy => {},
+            Behaviour::UpDown { center: _, speed: _ } => {}
+        }
+
         // Look in the right direction
         if self.position.x > hero_pos.x {
             self.direction = -1.0;
@@ -87,7 +94,8 @@ impl Ghost {
     }
 
 
-    fn brain(&mut self) {
+    fn brain(&mut self, hero_pos: Vec2) {
+
         
     }
 
