@@ -20,6 +20,13 @@ enum TextureName{
     Light,
 }
 
+#[derive(PartialEq, Eq, Clone, Copy)]
+enum TransitionName {
+    None,
+    FadeIn,
+    FadeOut
+}
+
 enum GameState {
     Intro,
     Game,
@@ -37,6 +44,10 @@ pub struct Game {
     colliders: Vec<Rect>,
     lights: [Light; 6],
     hero: Hero,
+
+    transition_alpha: f32,
+    transition: TransitionName,
+    transition_finished: bool
 }
 
 impl Game {
@@ -125,13 +136,28 @@ impl Game {
             colliders,
             monster_timer,
             monsters,
+
+            transition_alpha: 1.0,
+            transition: TransitionName::FadeIn,
+            transition_finished: false,
         }
 
     }
+    
     pub fn update(&mut self) {
         match self.state {
             GameState::Intro => {
                 self.update_decoration();
+                if self.transition_finished && self.transition == TransitionName::FadeOut{
+                    self.state = GameState::Game;
+                    self.transition = TransitionName::FadeIn;
+                }
+                if is_key_pressed(KeyCode::Space) {
+                    self.transition = TransitionName::FadeOut;
+                }
+
+
+               
             },
             GameState::Game => {
                 self.monster_timer -= 1;
@@ -153,13 +179,33 @@ impl Game {
                 self.update_decoration();
 
             },
-
-
             GameState::End => {},
-
             GameState::Win => {}
-
             _ => {},
+        }
+
+
+        // Transition screen update
+        match self.transition {
+            TransitionName::FadeIn => {
+                self.transition_finished = false;
+                self.transition_alpha -= 0.01;
+                if self.transition_alpha < 0.0 {
+                    self.transition_alpha = 0.0;
+                    self.transition_finished = true;
+                }
+
+
+            }
+            TransitionName::FadeOut => {
+                self.transition_finished = false;
+                self.transition_alpha += 0.01;
+                if self.transition_alpha > 1.0 {
+                    self.transition_finished = true;
+                    self.transition_alpha = 1.0;
+                }
+            }
+            TransitionName::None => {}
         }
     }
 
@@ -173,25 +219,6 @@ impl Game {
         }
     }
 
-    fn reset_game(&mut self) {
-        self.max_monsters = 5;
-        self.monsters = Vec::new();
-        self.monster_timer = 5;
-        self.hero = Hero::new(0.0, 0.0);
-    }
-
-    fn monster_incubator(&mut self) {
-        let m = Ghost::new(gen_range(50.0, 380.0), 52.0);
-        self.monsters.push(m);
-    }
-
-    /// An ugly experimental empiric camera setting function
-    fn set_camera_view(&mut self)  {
-        let ratio =  screen_width() / 1278.;
-        let h = 240.0 * screen_height() / 720. / ratio;
-        let camera = Camera2D::from_display_rect(Rect{x: 0.0, y: -0.5 * (h - 112.0), w: 426.0, h});
-        set_camera(&camera);
-    }
 
     pub fn render(&mut self) {
         clear_background(BLACK);
@@ -204,9 +231,6 @@ impl Game {
                 self.render_particles();
                 self.render_ground_mask();
                 self.render_letterbox_mask();
-                if is_key_pressed(KeyCode::Space) {
-                    self.state = GameState::Game;
-                }
             },
             GameState::Game => {
                 // The hero and thes monsters
@@ -219,7 +243,6 @@ impl Game {
 
                 self.render_ground_mask();
                 self.render_particles();
-                self.render_letterbox_mask();
                 self.render_letterbox_mask();
                 self.render_health_bar();
             },
@@ -242,6 +265,10 @@ impl Game {
                 }
             },
         }
+
+        // Transition screen
+        let color = Color { r: 0.0, g: 0.0, b: 0.0, a: self.transition_alpha };
+        draw_rectangle(0.0, -64.0, 426.0, 240.0, color);
 
         self.debug_info();
 
@@ -308,6 +335,32 @@ impl Game {
         }
     }
 
+
+    fn get_texture(&self, name: TextureName) -> Texture2D {
+        self.texture_library.get(&name).expect("No texture in library").clone()
+    }
+    
+    fn reset_game(&mut self) {
+        self.max_monsters = 5;
+        self.monsters = Vec::new();
+        self.monster_timer = 5;
+        self.hero = Hero::new(0.0, 0.0);
+        self.state = GameState::Intro;
+    }
+
+    fn monster_incubator(&mut self) {
+        let m = Ghost::new(gen_range(50.0, 380.0), 52.0);
+        self.monsters.push(m);
+    }
+
+    /// An ugly experimental empiric camera setting function
+    fn set_camera_view(&mut self)  {
+        let ratio =  screen_width() / 1278.;
+        let h = 240.0 * screen_height() / 720. / ratio;
+        let camera = Camera2D::from_display_rect(Rect{x: 0.0, y: -0.5 * (h - 112.0), w: 426.0, h});
+        set_camera(&camera);
+    }
+ 
     fn debug_info(&mut self) {
         // Reset game
         if is_key_pressed(KeyCode::Tab) {self.reset_game()}
@@ -335,9 +388,4 @@ impl Game {
         //draw_text(&format!("position: {} / {}", self.hero.position.x, self.hero.position.y), 16.0, 32.0, 24.0, RED);
 
     } 
-
-    fn get_texture(&self, name: TextureName) -> Texture2D {
-        self.texture_library.get(&name).expect("No texture in library").clone()
-    }
- 
 }
