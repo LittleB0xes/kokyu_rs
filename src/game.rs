@@ -7,6 +7,8 @@ use crate::{hero::Hero, particle::Particle};
 use crate::light::Light;
 use crate::ghost::Ghost;
 
+mod rendering;
+
 
 #[derive(Eq, PartialEq, Hash)]
 enum TextureName{
@@ -18,6 +20,7 @@ enum TextureName{
     ParticleOne,
     Hero,
     Light,
+    Title,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -27,6 +30,7 @@ enum TransitionName {
     FadeOut
 }
 
+#[derive(Copy, Clone)]
 enum GameState {
     Intro,
     Game,
@@ -83,6 +87,9 @@ impl Game {
         let health_bar_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/Health_bar.png"), None);
         health_bar_texture.set_filter(FilterMode::Nearest);
         
+        let title_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/Title.png"), None);
+        title_texture.set_filter(FilterMode::Nearest);
+        
         let texture_library: HashMap<TextureName, Texture2D> = HashMap::from([
             (TextureName::Background, background_texture),
             (TextureName::Ground, ground_texture),
@@ -92,6 +99,7 @@ impl Game {
             (TextureName::Ghost, ghost_texture),
             (TextureName::HealthDeco, health_container_texture),
             (TextureName::HealthBar, health_bar_texture),
+            (TextureName::Title, title_texture),
         ]);
 
         let mut particles = Vec::new();
@@ -228,9 +236,7 @@ impl Game {
 
         match self.state {
             GameState::Intro => {
-                self.render_particles();
-                self.render_ground_mask();
-                self.render_letterbox_mask();
+                self.render_title_screen(self.state);
             },
             GameState::Game => {
                 // The hero and thes monsters
@@ -274,66 +280,6 @@ impl Game {
 
     }
 
-    fn render_health_bar(&mut self) {
-        // And the health bar decoration
-        draw_texture(self.get_texture(TextureName::HealthDeco), 81.0, -48.0, WHITE);
-        // Health bar
-        draw_texture(self.get_texture(TextureName::HealthBar), 85.0, -36.0, WHITE);
-    }
-
-    fn render_letterbox_mask(&mut self) {
-        // Letterbox mask (to avoid some artifact)
-        draw_rectangle(0.0, -64.0, 426.0, 64.0, BLACK);
-        draw_rectangle(0.0, 112.0, 426.0, 64.0, BLACK);
-    }
-
-    fn render_particles(&mut self) {
-        // Some atmospheric particles
-        for part in self.particles.iter_mut() {
-            let texture = self.texture_library.get(&TextureName::ParticleOne).expect("No texture in library").clone();
-            part.sprite.draw_sprite(texture, Vec2::ZERO, 1.0);
-        }
-    }
-
-    fn render_ground_mask(&mut self) {
-        // The ground to hide some lights
-        let bg_params = DrawTextureParams {
-            dest_size: Some(Vec2::new(426.0, 112.0)),
-            source: Some(Rect::new(0.0, 0.0, 426.0, 112.0)),
-            rotation: 0.0,
-            flip_x: false,
-            flip_y: false,
-            pivot: None};
-        draw_texture_ex(self.get_texture(TextureName::Ground), 0.0 , 0.0, WHITE, bg_params);
-
-    }
-    fn render_background(&mut self) {
-        let bg_params = DrawTextureParams {
-            dest_size: Some(Vec2::new(426.0, 112.0)),
-            source: Some(Rect::new(0.0, 0.0, 426.0, 112.0)),
-            rotation: 0.0,
-            flip_x: false,
-            flip_y: false,
-            pivot: None};
-        draw_texture_ex(self.get_texture(TextureName::Background), 0.0 , 0.0, WHITE, bg_params);
-
-
-        // draw the light
-        for light in self.lights.iter() {
-            let texture = self.texture_library.get(&TextureName::Light).expect("No texture in library").clone();
-            let radius = light.get_radius();
-            let params = DrawTextureParams {
-                dest_size: Some(Vec2 { x: 2.0 * radius, y: 2.0 * radius }),
-                source: Some(Rect{x: 0.0, y: 0.0, w: 64.0, h:64.0}),
-                rotation: 0.0,
-                flip_x: false,
-                flip_y: false,
-                pivot: None
-            };
-            draw_texture_ex(texture, light.get_position().x, light.get_position().y, light.color, params);
-
-        }
-    }
 
 
     fn get_texture(&self, name: TextureName) -> Texture2D {
