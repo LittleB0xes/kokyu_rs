@@ -31,7 +31,7 @@ enum TransitionName {
 }
 
 #[derive(Copy, Clone)]
-enum GameState {
+pub enum GameState {
     Intro,
     Game,
     Win,
@@ -62,7 +62,7 @@ impl Game {
             .unwrap()
             .as_millis() as u64);
 
-        let state = GameState::Intro;
+        let state = GameState::Win;
         let background_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/Level.png"), None);
         background_texture.set_filter(FilterMode::Nearest);
         
@@ -187,8 +187,13 @@ impl Game {
                 self.update_decoration();
 
             },
-            GameState::End => {},
-            GameState::Win => {}
+            GameState::End => {
+                self.update_decoration();
+            },
+            GameState::Win => {
+
+                self.update_decoration();
+            }
             _ => {},
         }
 
@@ -254,18 +259,14 @@ impl Game {
             },
             GameState::End => {
 
-                self.render_particles();
-                self.render_ground_mask();
-                self.render_letterbox_mask();
+                self.render_title_screen(GameState::End);
                 if is_key_pressed(KeyCode::Space) {
                     self.state = GameState::Game;
                 }
             },
             GameState::Win => {
+                self.render_title_screen(GameState::Win);
 
-                self.render_particles();
-                self.render_ground_mask();
-                self.render_letterbox_mask();
                 if is_key_pressed(KeyCode::Space) {
                     self.state = GameState::Game;
                 }

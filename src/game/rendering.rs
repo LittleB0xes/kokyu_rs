@@ -54,7 +54,8 @@ impl Game {
                     pivot: None,
                 };
 
-                draw_texture_ex(self.get_texture(TextureName::Title), 149.0, 40.0, WHITE, title_params);
+                let color = Color::new(1.0, 1.0, 1.0, 0.9 + 0.1 * ((get_time() * 6.0)as f32).cos());
+                draw_texture_ex(self.get_texture(TextureName::Title), 149.0, 40.0, color, title_params);
                 
             },
             GameState::End => {
@@ -67,7 +68,8 @@ impl Game {
                     pivot: None,
                 };
 
-                draw_texture_ex(self.get_texture(TextureName::Title), 149.0, 40.0, WHITE, title_params);
+                let color = Color::new(1.0, 1.0, 1.0, 0.9 + 0.1 * ((get_time() * 6.0)as f32).cos());
+                draw_texture_ex(self.get_texture(TextureName::Title), 149.0, 40.0, color, title_params);
                 
             },
             _  => {}
