@@ -31,7 +31,7 @@ pub fn state_manager(&mut self, sound_bank: &SoundBox) {
         self.hited = false;
     }
 
-    if self.health <= 0 {
+    if self.health <= 0 && self.on_the_floor{
         self.state = State::Dying;
     }
 
@@ -167,8 +167,11 @@ pub fn state_manager(&mut self, sound_bank: &SoundBox) {
                 sound_bank.play(SoundList::Death);
             }
             if self.sprite.is_animation_ended() {self.state = State::Dead}
+            self.hitable = false;
         }
-        State::Dead => {},
+        State::Dead => {
+            self.hitable = false;
+        },
     }
 
     if self.direction == 1.0 {

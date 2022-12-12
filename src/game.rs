@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use macroquad::{prelude::*, rand::gen_range};
-use macroquad::audio::{Sound, load_sound_from_bytes, play_sound_once, play_sound, PlaySoundParams};
 
 use crate::sound_system::{SoundList, SoundBox};
 use crate::{hero::Hero, particle::Particle};
@@ -27,7 +26,6 @@ enum TextureName{
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 enum TransitionName {
-    None,
     FadeIn,
     FadeOut
 }
@@ -63,10 +61,10 @@ pub struct Game {
 impl Game {
     pub fn new(sound_bank: SoundBox) -> Self {
 
-        rand::srand(SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as u64);
+        //rand::srand(SystemTime::now()
+        //    .duration_since(UNIX_EPOCH)
+        //    .unwrap()
+        //    .as_millis() as u64);
 
         let state = GameState::Intro;
         let background_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/Level.png"), None);
@@ -95,7 +93,7 @@ impl Game {
         
         let title_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/Title.png"), None);
         title_texture.set_filter(FilterMode::Nearest);
-        
+       
         let texture_library: HashMap<TextureName, Texture2D> = HashMap::from([
             (TextureName::Background, background_texture),
             (TextureName::Ground, ground_texture),
@@ -244,7 +242,6 @@ impl Game {
                     self.ambiance_on = false;
                 }
             }
-            _ => {},
         }
 
 
@@ -268,7 +265,6 @@ impl Game {
                     self.transition_alpha = 1.0;
                 }
             }
-            TransitionName::None => {}
         }
     }
 
@@ -323,7 +319,7 @@ impl Game {
         let color = Color { r: 0.0, g: 0.0, b: 0.0, a: self.transition_alpha };
         draw_rectangle(0.0, -64.0, 426.0, 240.0, color);
 
-        self.debug_info();
+        //self.debug_info();
 
     }
 
@@ -334,7 +330,7 @@ impl Game {
     }
     
     fn reset_game(&mut self) {
-        self.max_monsters = 1;
+        self.max_monsters = 5;
         self.monsters = Vec::new();
         self.monster_timer = 5;
         self.hero = Hero::new(0.0, 0.0, 20);
@@ -354,31 +350,31 @@ impl Game {
         set_camera(&camera);
     }
  
-    fn debug_info(&mut self) {
-        // Reset game
-        if is_key_pressed(KeyCode::Tab) {self.reset_game()}
+    //fn debug_info(&mut self) {
+    //    // Reset game
+    //    if is_key_pressed(KeyCode::Tab) {self.reset_game()}
 
-        // debug rendering
-        let h_box = self.hero.get_collision_box(0.0, 0.0);
-        draw_rectangle_lines(h_box.x , h_box.y, h_box.w , h_box.h , 1.0, RED);
+    //    // debug rendering
+    //    let h_box = self.hero.get_collision_box(0.0, 0.0);
+    //    draw_rectangle_lines(h_box.x , h_box.y, h_box.w , h_box.h , 1.0, RED);
 
-        // Hero hitbox
-        self.hero.debug_hitbox();
+    //    // Hero hitbox
+    //    self.hero.debug_hitbox();
 
-        for m in self.monsters.iter() {
-            let m_box = m.get_collision_box(0.0, 0.0);
-            if m.is_hitable() {
+    //    for m in self.monsters.iter() {
+    //        let m_box = m.get_collision_box(0.0, 0.0);
+    //        if m.is_hitable() {
 
-                draw_rectangle_lines(m_box.x , m_box.y, m_box.w , m_box.h , 1.0, RED);
-            }
-            else {
-                draw_rectangle_lines(m_box.x , m_box.y, m_box.w , m_box.h , 1.0, GREEN);
+    //            draw_rectangle_lines(m_box.x , m_box.y, m_box.w , m_box.h , 1.0, RED);
+    //        }
+    //        else {
+    //            draw_rectangle_lines(m_box.x , m_box.y, m_box.w , m_box.h , 1.0, GREEN);
 
-            }
-        }
-        
-        //set_default_camera();    
-        //draw_text(&format!("position: {} / {}", self.hero.position.x, self.hero.position.y), 16.0, 32.0, 24.0, RED);
+    //        }
+    //    }
+    //    
+    //    //set_default_camera();    
+    //    //draw_text(&format!("position: {} / {}", self.hero.position.x, self.hero.position.y), 16.0, 32.0, 24.0, RED);
 
-    } 
+    //} 
 }

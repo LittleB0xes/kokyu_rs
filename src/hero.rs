@@ -109,7 +109,7 @@ impl Hero {
         // Gravity
         self.velocity.y += 0.5;
 
-        if self.state != State::Hit {
+        if self.state != State::Hit && self.state != State::Dying && self.state != State::Dead {
             self.direction = controls::get_x_axis();
             
             if let Some(AttackType::AttackDash { timer: _, dir }) = &self.attack {
@@ -233,11 +233,11 @@ impl Hero {
         }
     }
 
-    pub fn debug_hitbox(&self) {
-        if let Some(attack) = &self.attack {
-            if let Some(h_box) = get_hit_box(attack, self.sprite.current_frame, self.sprite.flip_x) {
-                draw_rectangle_lines(h_box.x + self.position.x, h_box.y + self.position.y, h_box.w, h_box.h, 1.0, YELLOW);
-            }
-        }
-    }
+    //pub fn debug_hitbox(&self) {
+    //    if let Some(attack) = &self.attack {
+    //        if let Some(h_box) = get_hit_box(attack, self.sprite.current_frame, self.sprite.flip_x) {
+    //            draw_rectangle_lines(h_box.x + self.position.x, h_box.y + self.position.y, h_box.w, h_box.h, 1.0, YELLOW);
+    //        }
+    //    }
+    //}
 }

@@ -94,7 +94,7 @@ impl Ghost {
     }
 
 
-    fn brain(&mut self, hero_pos: Vec2) {
+    fn brain(&mut self, _hero_pos: Vec2) {
         if self.state == MonsterState::Idle {
             match self.behaviour {
                 Behaviour::StandBy => {

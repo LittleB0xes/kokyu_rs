@@ -1,6 +1,5 @@
 use macroquad::prelude::*;
 
-use macroquad::audio::{Sound, load_sound_from_bytes, play_sound_once, play_sound, PlaySoundParams};
 use game:: Game;
 use sound_system::SoundBox;
 
@@ -24,6 +23,7 @@ mod controls;
 
 
 async fn main() {
+    //let mut game = Game::new(SoundBox::new());
     let mut game = Game::new(SoundBox::new().await);
 
     loop {
@@ -32,7 +32,7 @@ async fn main() {
 
 
 
-        next_frame().await
+        next_frame().await;
     }
 }
 
