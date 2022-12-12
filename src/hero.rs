@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 
 use std::collections::HashMap;
 
+use crate::sound_system::SoundBox;
 use crate::sprite::{AnimationData, AnimatedSprite};
 use crate::controls;
 use crate::ghost::Ghost;
@@ -23,6 +24,8 @@ pub struct Hero {
     animations: HashMap<State, AnimationData>,
     pub sprite: AnimatedSprite,
 
+    health: i32,
+
     collision_box: Rect,
 
     on_the_floor: bool,
@@ -32,7 +35,7 @@ pub struct Hero {
 }
 
 impl Hero {
-    pub fn new(x: f32, y: f32) -> Self {
+    pub fn new(x: f32, y: f32, life_time: i32) -> Self {
         let position = Vec2 { x, y };
         let animations = HashMap::from([
             (State::AirDash, AnimationData{x: 0, y: 0, h: 64, w: 64, frames: 7, speed: 4, pivot_x: 0, pivot_y: 0}),
@@ -40,10 +43,12 @@ impl Hero {
             (State::Walk, AnimationData{x: 0, y: 128, h: 64, w: 64, frames: 8, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::Idle, AnimationData{x: 0, y: 192, h: 64, w: 64, frames: 8, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::Jump, AnimationData{x: 0, y: 256, h: 64, w: 64, frames: 12, speed: 4, pivot_x: 0, pivot_y: 0}),
-            (State::AttackDouble, AnimationData{x: 0, y: 384, h: 64, w: 64, frames: 19, speed: 1, pivot_x: 0, pivot_y: 0}),
+            (State::AttackDouble, AnimationData{x: 0, y: 384, h: 64, w: 64, frames: 19, speed: 2, pivot_x: 0, pivot_y: 0}),
             (State::AttackOne, AnimationData{x: 0, y: 448, h: 64, w: 64, frames: 17, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::RepeatAttack, AnimationData{x: 640, y: 448, h: 64, w: 64, frames: 7, speed: 4, pivot_x: 0, pivot_y: 0}),
             (State::Hit, AnimationData{x: 128, y: 512, h: 64, w: 64, frames: 5, speed: 2, pivot_x: 0, pivot_y: 0}),
+            (State::Dying, AnimationData{x: 384, y: 320, h: 64, w: 64, frames: 13, speed: 10, pivot_x: 0, pivot_y: 0}),
+            (State::Dead, AnimationData{x: 1152, y: 320, h: 64, w: 64, frames: 1, speed: 2, pivot_x: 0, pivot_y: 0}),
         ]);
 
         let state = State::Idle;
@@ -60,6 +65,8 @@ impl Hero {
             sprite,
             collision_box: Rect { x: 27.0, y: 28.0, w: 10.0, h: 20.0 },
 
+            health: 60 * life_time,
+
             on_the_floor: false,
             hited: false,
             hitable: true,
@@ -67,7 +74,7 @@ impl Hero {
         }
     }
 
-    pub fn update(&mut self, monsters: &mut Vec<Ghost>, colliders: &Vec<Rect>) {
+    pub fn update(&mut self, monsters: &mut Vec<Ghost>, colliders: &Vec<Rect>, sound_bank: &SoundBox) {
         // Check monster collision
 
         self.hited = false;
@@ -97,7 +104,7 @@ impl Hero {
         }
 
 
-        self.state_manager();
+        self.state_manager(sound_bank);
 
         // Gravity
         self.velocity.y += 0.5;
@@ -166,6 +173,17 @@ impl Hero {
         }
 
 
+        // Health
+        self.health -= 1;
+        match &self.attack {
+            Some(_attack) => self.health -= 1,
+            None => {}
+        }
+        if self.health < 0 {
+            self.health = 0;
+        }
+
+
         // Check collision with scene
         for collider in colliders.iter() {
             if self.get_collision_box(0.0, self.velocity.y).overlaps(collider){
@@ -185,6 +203,17 @@ impl Hero {
     }
 
 
+    pub fn get_health(&self) -> i32 {
+        self.health
+        
+    }
+
+    pub fn is_dead(&self) -> bool {
+        match self.state {
+            State::Dead => true,
+            _ => false
+        }
+    }
 
     pub fn get_collision_box(&self, dx: f32, dy: f32) -> Rect {
         Rect { x: self.position.x + self.collision_box.x + dx, y: self.position.y + self.collision_box.y + dy, w: self.collision_box.w, h: self.collision_box.h }

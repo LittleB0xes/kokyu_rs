@@ -24,6 +24,8 @@ impl Particle {
     }
 
     pub fn update(&mut self) {
+        // only update the visual effect (id transparency), not the animation
+        // Animation is already updated when rendering (AnimatedSprite)
         let frame = self.sprite.current_frame as usize;
         self.sprite.set_transparency(self.alpha[frame]);
 

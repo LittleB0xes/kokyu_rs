@@ -1,6 +1,13 @@
 use macroquad::prelude::*;
-use game:: Game;
 
+use macroquad::audio::{Sound, load_sound_from_bytes, play_sound_once, play_sound, PlaySoundParams};
+use game:: Game;
+use sound_system::SoundBox;
+
+
+
+
+mod sound_system;
 mod game;
 mod hero;
 mod ghost;
@@ -17,10 +24,13 @@ mod controls;
 
 
 async fn main() {
-    let mut game = Game::new();
+    let mut game = Game::new(SoundBox::new().await);
+
     loop {
         game.update();
         game.render();
+
+
 
         next_frame().await
     }

@@ -10,6 +10,7 @@ impl Game {
     pub fn render_title_screen(&mut self, screen: GameState) {
         self.render_background();
         self.render_particles();
+        self.render_ground_mask();
         self.render_letterbox_mask();
         // Render title
        
@@ -83,7 +84,19 @@ impl Game {
         // And the health bar decoration
         draw_texture(self.get_texture(TextureName::HealthDeco), 81.0, -48.0, WHITE);
         // Health bar
-        draw_texture(self.get_texture(TextureName::HealthBar), 85.0, -36.0, WHITE);
+
+        let width = 240.0 * self.hero.get_health() as f32 / 1200.0;
+
+        let health_params = DrawTextureParams {
+            dest_size: Some(Vec2{x: width, y: 8.0}),
+            source: Some(Rect::new(0.0, 0.0, width, 8.0)),
+            rotation: 0.0,
+            flip_x: false,
+            flip_y: false,
+            pivot: None
+        };
+        let color = Color::new(1.0, 1.0, 1.0, 0.9 + 0.1 * ((get_time() * 4.0)as f32).cos());
+        draw_texture_ex(self.get_texture(TextureName::HealthBar), 85.0, -36.0, color, health_params);
     }
 
     pub fn render_letterbox_mask(&mut self) {

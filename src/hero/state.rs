@@ -1,4 +1,4 @@
-use crate::hero::Hero;
+use crate::{hero::Hero, sound_system::{SoundBox, SoundList}};
 use super::attack::AttackType;
 
 #[derive(PartialEq, Eq, Copy, Clone, Hash)]
@@ -11,6 +11,7 @@ pub enum State {
     RepeatAttack,
     Dash,
     AirDash,
+    Dying,
     Dead,
     Hit
 }
@@ -19,7 +20,7 @@ pub enum State {
 impl Hero {
 
 
-pub fn state_manager(&mut self) {
+pub fn state_manager(&mut self, sound_bank: &SoundBox) {
 
 
     let previous_state = self.state;
@@ -28,6 +29,10 @@ pub fn state_manager(&mut self) {
         self.state = State::Hit;
         self.hitable = false;
         self.hited = false;
+    }
+
+    if self.health <= 0 {
+        self.state = State::Dying;
     }
 
     match self.state {
@@ -82,6 +87,13 @@ pub fn state_manager(&mut self) {
         },
 
         State::AttackDouble => {
+            if self.sprite.current_frame ==  3 {
+                sound_bank.play(SoundList::Sword1);
+            }
+            if self.sprite.current_frame == 11 {
+                sound_bank.play(SoundList::Sword2);
+
+            }
             self.velocity.x = 0.0;
             if self.sprite.is_animation_ended() {
                 self.state = State::Idle;
@@ -90,6 +102,9 @@ pub fn state_manager(&mut self) {
         },
         
         State::AttackOne | State::RepeatAttack => {
+            if self.sprite.current_frame == 0 {
+                sound_bank.play(SoundList::Heavy);
+            }
             if let Some(attack) = &self.attack {
                 match attack {
                     AttackType::RepeatHeavy => self.state = State::RepeatAttack,
@@ -138,12 +153,21 @@ pub fn state_manager(&mut self) {
         },
 
         State::Hit => {
+            if self.sprite.current_frame == 0 {
+                sound_bank.play(SoundList::Huh1)
+            }
             if self.sprite.is_animation_ended() {
                 self.state = State::Idle;
                 self.hited = false;
                 self.hitable = true;
             }
         },
+        State::Dying => {
+            if self.sprite.current_frame ==  0 {
+                sound_bank.play(SoundList::Death);
+            }
+            if self.sprite.is_animation_ended() {self.state = State::Dead}
+        }
         State::Dead => {},
     }
 

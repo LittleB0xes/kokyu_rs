@@ -2,7 +2,9 @@ use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use macroquad::{prelude::*, rand::gen_range};
+use macroquad::audio::{Sound, load_sound_from_bytes, play_sound_once, play_sound, PlaySoundParams};
 
+use crate::sound_system::{SoundList, SoundBox};
 use crate::{hero::Hero, particle::Particle};
 use crate::light::Light;
 use crate::ghost::Ghost;
@@ -51,18 +53,22 @@ pub struct Game {
 
     transition_alpha: f32,
     transition: TransitionName,
-    transition_finished: bool
+    transition_finished: bool,
+
+    ambiance_on: bool,
+    sound_bank: SoundBox
+
 }
 
 impl Game {
-    pub fn new() -> Self {
+    pub fn new(sound_bank: SoundBox) -> Self {
 
         rand::srand(SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_millis() as u64);
 
-        let state = GameState::Win;
+        let state = GameState::Intro;
         let background_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/Level.png"), None);
         background_texture.set_filter(FilterMode::Nearest);
         
@@ -133,11 +139,13 @@ impl Game {
 
         ];
 
+        // Sound Loading
+
 
         Self {
             state,
             texture_library,
-            hero: Hero::new(0.0, 0.0),
+            hero: Hero::new(0.0, 0.0, 20),
             particles,
             lights,
             max_monsters,
@@ -148,6 +156,11 @@ impl Game {
             transition_alpha: 1.0,
             transition: TransitionName::FadeIn,
             transition_finished: false,
+
+            ambiance_on: false,
+
+            sound_bank,
+
         }
 
     }
@@ -155,10 +168,16 @@ impl Game {
     pub fn update(&mut self) {
         match self.state {
             GameState::Intro => {
+                if !self.ambiance_on {
+                    self.ambiance_on = true;
+                    self.sound_bank.play(SoundList::IntroSound);
+                }
                 self.update_decoration();
                 if self.transition_finished && self.transition == TransitionName::FadeOut{
                     self.state = GameState::Game;
                     self.transition = TransitionName::FadeIn;
+                    self.ambiance_on = false;
+                    self.sound_bank.stop(SoundList::IntroSound);
                 }
                 if is_key_pressed(KeyCode::Space) {
                     self.transition = TransitionName::FadeOut;
@@ -168,6 +187,12 @@ impl Game {
                
             },
             GameState::Game => {
+                if !self.ambiance_on {
+                    self.ambiance_on = true;
+                    self.sound_bank.play(SoundList::IntroSound);
+                    self.sound_bank.play(SoundList::Beat);
+                }
+
                 self.monster_timer -= 1;
                 if self.max_monsters > 0 && self.monster_timer == 0{
                     self.monster_incubator();
@@ -178,7 +203,7 @@ impl Game {
                 self.monsters.retain(|m| m.is_active());
 
 
-                self.hero.update(&mut self.monsters, &self.colliders);
+                self.hero.update(&mut self.monsters, &self.colliders, &self.sound_bank);
 
                 for monster in self.monsters.iter_mut() {
                     monster.update(self.hero.position);
@@ -186,13 +211,38 @@ impl Game {
 
                 self.update_decoration();
 
+                // End of game
+                if self.hero.is_dead() {
+                    self.state = GameState::End;
+                    self.sound_bank.stop(SoundList::Beat);
+                }
+                else if self.max_monsters == 0 && self.monsters.len() == 0{
+                    self.state = GameState::Win;
+
+                }
+
             },
             GameState::End => {
                 self.update_decoration();
+                if is_key_pressed(KeyCode::Space) {
+                    self.reset_game();
+                    self.state = GameState::Game;
+
+                    self.sound_bank.stop(SoundList::IntroSound);
+                    self.ambiance_on = false;
+                }
             },
             GameState::Win => {
 
                 self.update_decoration();
+                if is_key_pressed(KeyCode::Space) {
+                    self.reset_game();
+                    self.state = GameState::Game;
+
+                    self.sound_bank.stop(SoundList::IntroSound);
+                    self.sound_bank.stop(SoundList::Beat);
+                    self.ambiance_on = false;
+                }
             }
             _ => {},
         }
@@ -260,16 +310,12 @@ impl Game {
             GameState::End => {
 
                 self.render_title_screen(GameState::End);
-                if is_key_pressed(KeyCode::Space) {
-                    self.state = GameState::Game;
-                }
+                self.hero.sprite.draw_sprite(self.get_texture(TextureName::Hero), Vec2::ZERO, 1.0);
             },
             GameState::Win => {
                 self.render_title_screen(GameState::Win);
+                self.hero.sprite.draw_sprite(self.get_texture(TextureName::Hero), Vec2::ZERO, 1.0);
 
-                if is_key_pressed(KeyCode::Space) {
-                    self.state = GameState::Game;
-                }
             },
         }
 
@@ -288,10 +334,10 @@ impl Game {
     }
     
     fn reset_game(&mut self) {
-        self.max_monsters = 5;
+        self.max_monsters = 1;
         self.monsters = Vec::new();
         self.monster_timer = 5;
-        self.hero = Hero::new(0.0, 0.0);
+        self.hero = Hero::new(0.0, 0.0, 20);
         self.state = GameState::Intro;
     }
 

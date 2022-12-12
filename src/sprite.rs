@@ -47,8 +47,8 @@ impl AnimatedSprite {
     }
 
     fn animate(&mut self) {
-        self.elapsed += 1;
-        if self.elapsed > self.speed {
+        self.elapsed = (self.elapsed + 1) % self.speed;
+        if self.elapsed == 0 {//self.elapsed > self.speed {
             self.current_frame = (self.current_frame + 1) % self.frames;
             self.elapsed = 0;
         }
@@ -86,6 +86,7 @@ impl AnimatedSprite {
         self.source_rect = Rect::new(data.x as f32, data.y as f32, data.w as f32, data.h as f32);
         self.frames = data.frames;
         self.speed = data.speed;
+        self.elapsed = 0;
     }
 
     pub fn set_position_to(&mut self, position: Vec2) {
