@@ -51,6 +51,9 @@ impl SoundBox {
 
 
     }
+    pub fn empty() -> Self {
+        Self {bank: Vec::new()}
+    }
 
     pub fn play(&self, name: SoundList) {
         let params = match name {

@@ -23,8 +23,8 @@ mod controls;
 
 
 async fn main() {
-    //let mut game = Game::new(SoundBox::new());
     let mut game = Game::new(SoundBox::new().await);
+    //let mut game = Game::new(SoundBox::empty());
 
     loop {
         game.update();
