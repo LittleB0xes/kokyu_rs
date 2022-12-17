@@ -1,3 +1,5 @@
+use macroquad::rand::gen_range;
+
 use crate::{hero::Hero, sound_system::{SoundBox, SoundList}};
 use super::attack::AttackType;
 
@@ -154,6 +156,15 @@ pub fn state_manager(&mut self, sound_bank: &SoundBox) {
 
         State::Hit => {
             if self.sprite.current_frame == 0 {
+                let alea = gen_range(0, 3);
+                match alea {
+                    0 => sound_bank.play(SoundList::Huh1),
+                    1 => sound_bank.play(SoundList::Huh2),
+                    2 => sound_bank.play(SoundList::Huh3),
+                    _ => {}
+
+                }
+
                 sound_bank.play(SoundList::Huh1)
             }
             if self.sprite.is_animation_ended() {

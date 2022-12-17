@@ -1,5 +1,5 @@
 
-use macroquad::{audio::{Sound, play_sound, PlaySoundParams, stop_sound, load_sound_from_bytes, load_sound}, prelude::set_pc_assets_folder};
+use macroquad::audio::{Sound, play_sound, PlaySoundParams, stop_sound, load_sound_from_bytes};
 
 #[derive(Hash, PartialEq, Eq)]
 pub enum SoundList {
@@ -42,19 +42,9 @@ impl SoundBox {
         // Add ambiance sound
         add_ambiance_sound(&mut bank).await;
 
-        
         Self {
             bank,
-
-
         }
-    }
-
-
-  
-
-    pub fn empty() -> Self {
-        Self {bank: Vec::new()}
     }
 
     pub fn play(&self, name: SoundList) {
