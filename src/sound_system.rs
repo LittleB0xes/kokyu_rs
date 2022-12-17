@@ -3,15 +3,15 @@ use macroquad::{audio::{Sound, play_sound, PlaySoundParams, stop_sound, load_sou
 
 #[derive(Hash, PartialEq, Eq)]
 pub enum SoundList {
-    IntroSound = 0,
-    Beat,
-    Huh1,
+    Huh1 = 0,
     Huh2,
     Huh3,
     Death,
     Heavy,
     Sword1,
     Sword2,
+    IntroSound,
+    Beat,
 }
 pub struct SoundBox {
     bank: Vec<Sound>,
@@ -21,11 +21,6 @@ pub struct SoundBox {
 impl SoundBox {
     pub async fn new() -> Self {
         //set_pc_assets_folder("../assets");
-
-        //let intro_sound = load_sound("amb_intro.mp3").await.unwrap();
-        //let beat_sound = load_sound("heart_beat.mp3").await.unwrap();
-        let intro_sound = load_sound_from_bytes(include_bytes!("../assets/sounds/amb_intro.ogg")).await.unwrap();
-        let beat_sound = load_sound_from_bytes(include_bytes!("../assets/sounds/heart_beat.ogg")).await.unwrap();
         let huh1_sound = load_sound_from_bytes(include_bytes!("../assets/sounds/huh_1.wav")).await.unwrap();
         let huh2_sound = load_sound_from_bytes(include_bytes!("../assets/sounds/huh_2.wav")).await.unwrap();
         let huh3_sound = load_sound_from_bytes(include_bytes!("../assets/sounds/huh_3.wav")).await.unwrap();
@@ -33,24 +28,31 @@ impl SoundBox {
         let heavy_sound = load_sound_from_bytes(include_bytes!("../assets/sounds/sword_heavy.wav")).await.unwrap();
         let sword1_sound = load_sound_from_bytes(include_bytes!("../assets/sounds/sword1.wav")).await.unwrap();
         let sword2_sound = load_sound_from_bytes(include_bytes!("../assets/sounds/sword2.wav")).await.unwrap();
-        Self {
-            bank: vec![
-                intro_sound,
-                beat_sound,
-                huh1_sound,
-                huh2_sound,
-                huh3_sound,
-                death_sound,
-                heavy_sound,
-                sword1_sound,
-                sword2_sound,
+        let mut bank = vec![
+            huh1_sound,
+            huh2_sound,
+            huh3_sound,
+            death_sound,
+            heavy_sound,
+            sword1_sound,
+            sword2_sound,
+            
+        ];
 
-            ]
+        // Add ambiance sound
+        add_ambiance_sound(&mut bank).await;
+
+        
+        Self {
+            bank,
+
 
         }
-
-
     }
+
+
+  
+
     pub fn empty() -> Self {
         Self {bank: Vec::new()}
     }
@@ -74,5 +76,20 @@ impl SoundBox {
         stop_sound(self.bank[name as usize]);
     }
 
+
+}
+
+
+#[cfg(not(target_arch ="wasm32"))]
+async fn add_ambiance_sound(bank: &mut Vec<Sound>) {
+    bank.push(load_sound_from_bytes(include_bytes!("../assets/sounds/amb_intro.ogg")).await.unwrap());
+    bank.push(load_sound_from_bytes(include_bytes!("../assets/sounds/heart_beat.ogg")).await.unwrap());
+
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn add_ambiance_sound(bank: &mut Vec<Sound>) {
+    bank.push(load_sound_from_bytes(include_bytes!("../assets/sounds/amb_intro.mp3")).await.unwrap());
+    bank.push(load_sound_from_bytes(include_bytes!("../assets/sounds/heart_beat.mp3")).await.unwrap());
 
 }

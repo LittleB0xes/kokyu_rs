@@ -61,11 +61,6 @@ pub struct Game {
 impl Game {
     pub fn new(sound_bank: SoundBox) -> Self {
 
-        //rand::srand(SystemTime::now()
-        //    .duration_since(UNIX_EPOCH)
-        //    .unwrap()
-        //    .as_millis() as u64);
-
         let state = GameState::Intro;
         let background_texture = Texture2D::from_file_with_format(include_bytes!("../assets/sprites/Level.png"), None);
         background_texture.set_filter(FilterMode::Nearest);
